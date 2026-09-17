@@ -40,5 +40,43 @@ describe('State', () => {
       expect(() => new State('x', { onEnter: invalidHook })).toThrow(TypeError)
     }
   })
+
+  it('runs its onExit hook with the shared context', () => {
+    const context = { departures: 0 }
+    const state = new State('paid', {
+      onExit: (ctx) => { ctx.departures += 1 }
+    })
+
+    state.exit(context)
+
+    expect(context.departures).toBe(1)
+  })
+
+  it('does nothing when exited without an onExit hook', () => {
+    const state = new State('idle')
+
+    expect(() => state.exit({})).not.toThrow()
+  })
+
+  it('keeps onEnter and onExit independent of each other', () => {
+    const calls = []
+    const state = new State('paid', {
+      onEnter: () => calls.push('enter'),
+      onExit: () => calls.push('exit')
+    })
+
+    state.enter({})
+    state.exit({})
+
+    expect(calls).toEqual(['enter', 'exit'])
+  })
+
+  it('rejects an onExit that is not a function', () => {
+    const invalidHooks = ['not-a-function', 42, {}, null]
+
+    for (const invalidHook of invalidHooks) {
+      expect(() => new State('x', { onExit: invalidHook })).toThrow(TypeError)
+    }
+  })
 })
 
