@@ -15,5 +15,30 @@ describe('State', () => {
       expect(() => new State(invalidName)).toThrow(TypeError)
     }
   })
+
+  it('runs its onEnter hook with the shared context', () => {
+    const context = { visits: 0 }
+    const state = new State('paid', {
+      onEnter: (ctx) => { ctx.visits += 1 }
+    })
+
+    state.enter(context)
+
+    expect(context.visits).toBe(1)
+  })
+
+  it('does nothing when entered without an onEnter hook', () => {
+    const state = new State('idle')
+
+    expect(() => state.enter({})).not.toThrow()
+  })
+
+  it('rejects an onEnter that is not a function', () => {
+    const invalidHooks = ['not-a-function', 42, {}, null]
+
+    for (const invalidHook of invalidHooks) {
+      expect(() => new State('x', { onEnter: invalidHook })).toThrow(TypeError)
+    }
+  })
 })
 
