@@ -55,6 +55,25 @@ describe('Transition', () => {
     }
   })
 
+  it('accepts a move without a guard', () => {
+    expect(() => new Transition(validMove)).not.toThrow()
+  })
+
+  it('accepts a function as a guard', () => {
+    const validGuard = (context) => context.amount > 0
+
+    expect(() => new Transition({ ...validMove, guard: validGuard })).not.toThrow()
+  })
+
+  it('rejects a guard that is not a function', () => {
+    const invalidGuards = ['always', 42, {}, null, true, ['guard']]
+
+    for (const invalidGuard of invalidGuards) {
+      expect(() => new Transition({ ...validMove, guard: invalidGuard }))
+        .toThrow(TypeError)
+    }
+  })
+
   it('rejects being built without a move at all', () => {
     expect(() => new Transition()).toThrow(TypeError)
   })

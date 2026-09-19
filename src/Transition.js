@@ -5,21 +5,28 @@ export class Transition {
   #fromStateName
   #toStateName
   #eventName
+  #guard
 
   /**
    * @param {object} move
    * @param {string} move.from - Name of the state to leave.
    * @param {string} move.to - Name of the state to enter.
    * @param {string} move.on - Name of the triggering event.
+   * @param {(context: object) => boolean} [move.guard] - Decides if the move is allowed.
    */
-  constructor ({ from, to, on } = {}) {
+  constructor ({ from, to, on, guard } = {}) {
     this.#requireName(from, 'from')
     this.#requireName(to, 'to')
     this.#requireName(on, 'on')
 
+    if (guard !== undefined && typeof guard !== 'function') {
+      throw new TypeError('Transition guard must be a function when provided.')
+    }
+
     this.#fromStateName = from
     this.#toStateName = to
     this.#eventName = on
+    this.#guard = guard
   }
 
   /**
