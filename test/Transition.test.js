@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { Transition } from '../src/Transition.js'
 
+const validMove = { from: 'placed', to: 'paid', on: 'pay' }
+const invalidNames = [undefined, null, '', '   ', 42, {}, ['idle']]
+
 describe('Transition', () => {
   it('exposes the move it was given', () => {
     const transition = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
@@ -16,29 +19,9 @@ describe('Transition', () => {
     expect(transition.fromStateName).toBe(transition.toStateName)
   })
 
-  it('rejects a from that is not a non-empty string', () => {
-    const invalidNames = [undefined, null, '', '   ', 42, {}, ['placed']]
-
+  it.each(['from', 'to', 'on'])('rejects %s unless it is a non-empty string', (field) => {
     for (const invalidName of invalidNames) {
-      expect(() => new Transition({ from: invalidName, to: 'paid', on: 'pay' }))
-        .toThrow(TypeError)
-    }
-  })
-
-  it('rejects a to that is not a non-empty string', () => {
-    const invalidNames = [undefined, null, '', '   ', 42, {}, ['paid']]
-
-    for (const invalidName of invalidNames) {
-      expect(() => new Transition({ from: 'placed', to: invalidName, on: 'pay' }))
-        .toThrow(TypeError)
-    }
-  })
-
-  it('rejects an on that is not a non-empty string', () => {
-    const invalidNames = [undefined, null, '', '   ', 42, {}, ['pay']]
-
-    for (const invalidName of invalidNames) {
-      expect(() => new Transition({ from: 'placed', to: 'paid', on: invalidName }))
+      expect(() => new Transition({ ...validMove, [field]: invalidName }))
         .toThrow(TypeError)
     }
   })
