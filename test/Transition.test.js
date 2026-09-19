@@ -99,16 +99,27 @@ describe('Transition', () => {
     expect(transition.isAllowedIn({ amount: 0 })).toBe(false)
   })
 
-  it('returns a boolean even when its guard returns something else', () => {
-    const truthy = new Transition({ ...validMove, guard: () => 'yes' })
-    const falsy = new Transition({ ...validMove, guard: () => 0 })
-    const falsy2 = new Transition({ ...validMove, guard: () => null })
-    const falsy3 = new Transition({ ...validMove, guard: () => undefined })
+  it.each([
+    ['a non-empty string', 'yes'],
+    ['a positive number', 250],
+    ['an empty array', []],
+    ['an empty object', {}]
+  ])('allows the move when its guard returns %s', (_description, guardResult) => {
+    const transition = new Transition({ ...validMove, guard: () => guardResult })
 
-    expect(truthy.isAllowedIn({})).toBe(true)
-    expect(falsy.isAllowedIn({})).toBe(false)
-    expect(falsy2.isAllowedIn({})).toBe(false)
-    expect(falsy3.isAllowedIn({})).toBe(false)
+    expect(transition.isAllowedIn({})).toBe(true)
+  })
+
+  it.each([
+    ['zero', 0],
+    ['an empty string', ''],
+    ['null', null],
+    ['undefined', undefined],
+    ['NaN', NaN]
+  ])('blocks the move when its guard returns %s', (_description, guardResult) => {
+    const transition = new Transition({ ...validMove, guard: () => guardResult })
+
+    expect(transition.isAllowedIn({})).toBe(false)
   })
 
   it('asks its guard again on every call', () => {
