@@ -59,6 +59,18 @@ export class Transition {
   }
 
   /**
+   * @param {object} context - The state machine's shared context.
+   * @returns {boolean} - True if this transition is allowed to run right now.
+   */
+  isAllowedIn (context) {
+    if (this.#guard === undefined) {
+      return true
+    }
+
+    return Boolean(this.#guard(context))
+  }
+
+  /**
    * Throws unless the value can be used as a name.
    *
    * @param {*} value

@@ -71,6 +71,55 @@ describe('Transition', () => {
     }
   })
 
+  it('is allowed in any context when it has no guard', () => {
+    const transition = new Transition(validMove)
+
+    expect(transition.isAllowedIn({})).toBe(true)
+  })
+
+  it('is allowed when its guard returns true', () => {
+    const transition = new Transition({ ...validMove, guard: () => true })
+
+    expect(transition.isAllowedIn({})).toBe(true)
+  })
+
+  it('is not allowed when its guard returns false', () => {
+    const transition = new Transition({ ...validMove, guard: () => false })
+
+    expect(transition.isAllowedIn({})).toBe(false)
+  })
+
+  it('passes the context on to its guard', () => {
+    const transition = new Transition({
+      ...validMove,
+      guard: (context) => context.amount > 0
+    })
+
+    expect(transition.isAllowedIn({ amount: 250 })).toBe(true)
+    expect(transition.isAllowedIn({ amount: 0 })).toBe(false)
+  })
+
+  it('returns a boolean even when its guard returns something else', () => {
+    const truthy = new Transition({ ...validMove, guard: () => 'yes' })
+    const falsy = new Transition({ ...validMove, guard: () => 0 })
+    const falsy2 = new Transition({ ...validMove, guard: () => null })
+    const falsy3 = new Transition({ ...validMove, guard: () => undefined })
+
+    expect(truthy.isAllowedIn({})).toBe(true)
+    expect(falsy.isAllowedIn({})).toBe(false)
+    expect(falsy2.isAllowedIn({})).toBe(false)
+    expect(falsy3.isAllowedIn({})).toBe(false)
+  })
+
+  it('asks its guard again on every call', () => {
+    let allowed = false
+    const transition = new Transition({ ...validMove, guard: () => allowed })
+
+    expect(transition.isAllowedIn({})).toBe(false)
+    allowed = true
+    expect(transition.isAllowedIn({})).toBe(true)
+  })
+
   it('rejects being built without a move at all', () => {
     expect(() => new Transition()).toThrow(TypeError)
   })
