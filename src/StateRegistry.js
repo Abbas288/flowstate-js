@@ -26,4 +26,23 @@ export class StateRegistry {
   has (name) {
     return this.#statesByName.has(name)
   }
+
+  /**
+   * Finds a registered state by its name.
+   *
+   * @param {string} name - The name to look for.
+   * @returns {State|undefined} - The state registered under the given name, or undefined
+   *   when no state with that name is registered.
+   */
+  get (name) {
+    return this.#statesByName.get(name)
+  }
+
+  /**
+   * @returns {string[]} - The names of every registered state, in the order they were
+   *   registered. The caller gets a copy and cannot change the registry through it.
+   */
+  get stateNames () {
+    return [...this.#statesByName.keys()]
+  }
 }

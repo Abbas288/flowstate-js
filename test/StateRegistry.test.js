@@ -34,6 +34,47 @@ describe('StateRegistry', () => {
     expect(invoices.has('paid')).toBe(false)
   })
 
+  it('hands back the very state that was registered', () => {
+    const registry = new StateRegistry()
+    const paid = new State('paid')
+
+    registry.register(paid)
+
+    expect(registry.get('paid')).toBe(paid)
+  })
+
+  it('hands back nothing for a name that was never registered', () => {
+    const registry = new StateRegistry()
+
+    expect(registry.get('shipped')).toBeUndefined()
+  })
+
+  it('lists the names of every registered state in registration order', () => {
+    const registry = new StateRegistry()
+
+    registry.register(new State('placed'))
+    registry.register(new State('paid'))
+    registry.register(new State('shipped'))
+
+    expect(registry.stateNames).toEqual(['placed', 'paid', 'shipped'])
+  })
+
+  it('lists no names while empty', () => {
+    const registry = new StateRegistry()
+
+    expect(registry.stateNames).toEqual([])
+  })
+
+  it('cannot be changed through the list of names it hands out', () => {
+    const registry = new StateRegistry()
+    registry.register(new State('paid'))
+
+    registry.stateNames.push('forged')
+
+    expect(registry.stateNames).toEqual(['paid'])
+    expect(registry.has('forged')).toBe(false)
+  })
+
   it('rejects values that are not states', () => {
     const registry = new StateRegistry()
     const nonStates = ['paid', 42, {}, { name: 'paid' }, null, undefined]
