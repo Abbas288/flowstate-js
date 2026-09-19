@@ -44,6 +44,14 @@ export class Transition {
   }
 
   /**
+   * @param {string} eventName - Name of the event to test.
+   * @returns {boolean} - True if that event triggers this transition.
+   */
+  isTriggeredBy (eventName) {
+    return this.#eventName === eventName
+  }
+
+  /**
    * Throws unless the value can be used as a name.
    *
    * @param {*} value

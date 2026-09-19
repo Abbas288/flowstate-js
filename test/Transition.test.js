@@ -4,6 +4,9 @@ import { Transition } from '../src/Transition.js'
 const validMove = { from: 'placed', to: 'paid', on: 'pay' }
 const invalidNames = [undefined, null, '', '   ', 42, {}, ['idle']]
 
+// Safe to share: a Transition exposes getters only, so no test can change it.
+const payTransition = new Transition(validMove)
+
 describe('Transition', () => {
   it('exposes the move it was given', () => {
     const transition = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
@@ -23,6 +26,32 @@ describe('Transition', () => {
     for (const invalidName of invalidNames) {
       expect(() => new Transition({ ...validMove, [field]: invalidName }))
         .toThrow(TypeError)
+    }
+  })
+
+  it('is triggered by the event it was built with', () => {
+    const transition = new Transition(validMove)
+
+    expect(transition.isTriggeredBy('pay')).toBe(true)
+  })
+
+  it('is not triggered by any other event', () => {
+    const transition = new Transition(validMove)
+
+    expect(transition.isTriggeredBy('ship')).toBe(false)
+  })
+
+  it('tells events apart by case', () => {
+    const transition = new Transition(validMove)
+
+    expect(transition.isTriggeredBy('Pay')).toBe(false)
+  })
+
+  it('answers false instead of throwing exception when asked about a non-string', () => {
+    const transition = new Transition(validMove)
+
+    for (const invalidName of invalidNames) {
+      expect(transition.isTriggeredBy(invalidName)).toBe(false)
     }
   })
 
