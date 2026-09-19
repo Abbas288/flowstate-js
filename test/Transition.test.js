@@ -4,9 +4,6 @@ import { Transition } from '../src/Transition.js'
 const validMove = { from: 'placed', to: 'paid', on: 'pay' }
 const invalidNames = [undefined, null, '', '   ', 42, {}, ['idle']]
 
-// Safe to share: a Transition exposes getters only, so no test can change it.
-const payTransition = new Transition(validMove)
-
 describe('Transition', () => {
   it('exposes the move it was given', () => {
     const transition = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
