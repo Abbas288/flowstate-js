@@ -92,7 +92,7 @@ describe('Transition', () => {
   it('passes the context on to its guard', () => {
     const transition = new Transition({
       ...validMove,
-      guard: (context) => context.amount > 0
+      guard: (context) => context.amount > 0,
     })
 
     expect(transition.isAllowedIn({ amount: 250 })).toBe(true)
@@ -103,7 +103,7 @@ describe('Transition', () => {
     ['a non-empty string', 'yes'],
     ['a positive number', 250],
     ['an empty array', []],
-    ['an empty object', {}]
+    ['an empty object', {}],
   ])('allows the move when its guard returns %s', (_description, guardResult) => {
     const transition = new Transition({ ...validMove, guard: () => guardResult })
 
@@ -115,7 +115,7 @@ describe('Transition', () => {
     ['an empty string', ''],
     ['null', null],
     ['undefined', undefined],
-    ['NaN', NaN]
+    ['NaN', NaN],
   ])('blocks the move when its guard returns %s', (_description, guardResult) => {
     const transition = new Transition({ ...validMove, guard: () => guardResult })
 
