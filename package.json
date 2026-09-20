@@ -5,12 +5,16 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
+    "@lnu/eslint-config": "^2.0.13",
+    "eslint": "^10.11.0",
     "vitest": "^5.0.1"
   }
 }
