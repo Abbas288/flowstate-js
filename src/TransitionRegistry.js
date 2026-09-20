@@ -28,9 +28,8 @@ export class TransitionRegistry {
    *   is none. When several match, the one registered first wins.
    */
   find (fromStateName, eventName) {
-    return this.#transitions.find((transition) =>
-      transition.fromStateName === fromStateName && transition.isTriggeredBy(eventName)
-    )
+    return this.transitionsFrom(fromStateName)
+      .find((transition) => transition.isTriggeredBy(eventName))
   }
 
   /**
