@@ -76,6 +76,67 @@ describe('TransitionRegistry', () => {
     expect(invoices.find('placed', 'pay')).toBeUndefined()
   })
 
+  it('lists every way out of a state, in registration order', () => {
+    const registry = new TransitionRegistry()
+    const pay = new Transition(payMove)
+    const cancel = new Transition({ from: 'placed', to: 'void', on: 'cancel' })
+
+    registry.register(pay)
+    registry.register(cancel)
+
+    expect(registry.transitionsFrom('placed')).toEqual([pay, cancel])
+  })
+
+  it('lists no way out of a state that has none', () => {
+    const registry = new TransitionRegistry()
+    registry.register(new Transition(payMove))
+
+    expect(registry.transitionsFrom('shipped')).toEqual([])
+  })
+
+  it('lists no way out while empty', () => {
+    const registry = new TransitionRegistry()
+
+    expect(registry.transitionsFrom('placed')).toEqual([])
+  })
+
+  it('leaves out transitions that start somewhere else', () => {
+    const registry = new TransitionRegistry()
+    const pay = new Transition(payMove)
+
+    registry.register(pay)
+    registry.register(new Transition(shipMove))
+
+    expect(registry.transitionsFrom('placed')).toEqual([pay])
+  })
+
+  it('lists a transition even when its guard says no', () => {
+    const registry = new TransitionRegistry()
+    const guardedPay = new Transition({ ...payMove, guard: () => false })
+
+    registry.register(guardedPay)
+
+    expect(registry.transitionsFrom('placed')).toEqual([guardedPay])
+  })
+
+  it('lists a transition that returns to the same state', () => {
+    const registry = new TransitionRegistry()
+    const confirm = new Transition({ from: 'paid', to: 'paid', on: 'confirm' })
+
+    registry.register(confirm)
+
+    expect(registry.transitionsFrom('paid')).toEqual([confirm])
+  })
+
+  it('cannot be changed through the list it returns', () => {
+    const registry = new TransitionRegistry()
+    registry.register(new Transition(payMove))
+
+    registry.transitionsFrom('placed').push(new Transition(shipMove))
+
+    expect(registry.transitionsFrom('placed')).toHaveLength(1)
+  })
+
   it('rejects values that are not transitions', () => {
     const registry = new TransitionRegistry()
     const nonTransitions = ['pay', 42, {}, payMove, null, undefined]

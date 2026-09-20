@@ -32,4 +32,17 @@ export class TransitionRegistry {
       transition.fromStateName === fromStateName && transition.isTriggeredBy(eventName)
     )
   }
+
+  /**
+   * Lists every way out of a state, whether or not a guard currently allows it.
+   *
+   * @param {string} fromStateName - Name of the state to leave.
+   * @returns {Transition[]} - The transitions leaving that state, in registration order.
+   *   The caller gets a new array and cannot change the registry through it.
+   */
+  transitionsFrom (fromStateName) {
+    return this.#transitions.filter(
+      (transition) => transition.fromStateName === fromStateName
+    )
+  }
 }
