@@ -7,12 +7,13 @@ export class State {
   #onExit
 
   /**
+   * Builds a state. Both hooks are optional, and a state without them is simply a name
+   * the machine can rest in.
+   *
    * @param {string} name - Identifies the state within its machine.
-   * @param {object} [options]
-   * @param {(context: object) => void} [options.onEnter] - Called when this state
-   *   becomes the current state, receiving the machine's shared context.
-   * @param {(context: object) => void} [options.onExit] - Called when this state
-   *   stops being the current state, receiving the machine's shared context.
+   * @param {object} [options] - The hooks to run on the way in and out.
+   * @param {(context: object) => void} [options.onEnter] - Runs on entering this state.
+   * @param {(context: object) => void} [options.onExit] - Runs on leaving this state.
    */
   constructor (name, { onEnter, onExit } = {}) {
     if (typeof name !== 'string' || name.trim() === '') {
@@ -33,7 +34,9 @@ export class State {
   }
 
   /**
-   * @returns {string} The name identifying this state.
+   * Tells what this state is called. The name is fixed once the state is built.
+   *
+   * @returns {string} - The name identifying this state.
    */
   get name () {
     return this.#name

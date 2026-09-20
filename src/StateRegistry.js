@@ -20,6 +20,8 @@ export class StateRegistry {
   }
 
   /**
+   * Checks whether a name is taken, without fetching the state behind it.
+   *
    * @param {string} name - The name to look for.
    * @returns {boolean} - True if a state with the given name is registered, false otherwise.
    */
@@ -39,6 +41,8 @@ export class StateRegistry {
   }
 
   /**
+   * Lists what the machine knows about. A new array is built on every access.
+   *
    * @returns {string[]} - The names of every registered state, in the order they were
    *   registered. The caller gets a copy and cannot change the registry through it.
    */
