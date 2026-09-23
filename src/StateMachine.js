@@ -1,5 +1,7 @@
 import { State } from './State.js'
 import { StateRegistry } from './StateRegistry.js'
+import { Transition } from './Transition.js'
+import { TransitionRegistry } from './TransitionRegistry.js'
 
 /**
  * A machine that is in exactly one state at a time, and that can be asked about the
@@ -8,6 +10,7 @@ import { StateRegistry } from './StateRegistry.js'
 export class StateMachine {
   #currentStateName
   #states = new StateRegistry()
+  #transitions = new TransitionRegistry()
 
   /**
    * Starts the machine off in a state. The name does not have to be defined yet, so a
@@ -57,5 +60,35 @@ export class StateMachine {
     this.#states.register(new State(name, options))
 
     return this
+  }
+
+  /**
+   * Teaches the machine one way to move between states. The named states do not have to
+   * be defined yet, so transitions and states can be declared in any order.
+   *
+   * @param {object} move - The three names that make up the move, plus an optional guard.
+   * @param {string} move.from - Name of the state to leave.
+   * @param {string} move.to - Name of the state to enter.
+   * @param {string} move.on - Name of the triggering event.
+   * @param {(context: object) => boolean} [move.guard] - Decides if the move is allowed.
+   * @returns {StateMachine} - This machine, so that definitions can be chained.
+   */
+  defineTransition (move) {
+    this.#transitions.register(new Transition(move))
+
+    return this
+  }
+
+  /**
+   * Lists the events that lead somewhere from a state. Guards are not consulted, so an
+   * event may appear here and still be refused at the moment you send it.
+   *
+   * @param {string} fromStateName - Name of the state to look out from.
+   * @returns {string[]} - Names of the events leaving that state, in definition order.
+   */
+  eventNamesFrom (fromStateName) {
+    return this.#transitions
+      .transitionsFrom(fromStateName)
+      .map((transition) => transition.eventName)
   }
 }
