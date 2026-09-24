@@ -7,7 +7,7 @@ export class TransitionRegistry {
   #transitions = []
 
   /**
-   * Stores a transition for later lookup. Alike transitions are all kept.
+   * Stores a transition for later lookup. Two identical transitions are both kept.
    *
    * @param {Transition} transition - The transition to store.
    */
@@ -20,7 +20,7 @@ export class TransitionRegistry {
   }
 
   /**
-   * When several transitions match, the one registered first wins.
+   * The transition registered first wins when several of them match.
    *
    * @param {string} fromStateName - Name of the state to leave.
    * @param {string} eventName - Name of the event being sent.
@@ -32,7 +32,8 @@ export class TransitionRegistry {
   }
 
   /**
-   * Lists every way out, guard or no guard. The array is new, so the registry is safe.
+   * Guards are ignored, so every way out is listed. The array is a copy,
+   * so changing it cannot affect the registry.
    *
    * @param {string} fromStateName - Name of the state to leave.
    * @returns {Transition[]} - The transitions leaving that state, in registration order.

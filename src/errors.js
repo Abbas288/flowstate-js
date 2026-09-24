@@ -1,9 +1,10 @@
 /**
- * Base class for every error thrown when a rule of your machine is broken. Catching this
- * catches them all, including kinds added later.
+ * Base class for every error thrown when a rule of your machine is broken.
+ * Catching this one catches them all, including kinds added later.
  *
- * Wrong argument types are not these: a non-string name or a non-function guard throws
- * the built-in TypeError, because the mistake is in the calling code, not in the machine.
+ * A wrong argument type is not one of these. A non-string name or a
+ * non-function guard throws the built-in TypeError, because the mistake is
+ * in the calling code rather than in the machine.
  */
 export class FlowStateError extends Error {
   /**
@@ -14,19 +15,22 @@ export class FlowStateError extends Error {
   constructor (message) {
     super(message)
 
+    // Logs the actual class name (e.g., UnknownStateError) instead of "Error".
     this.name = this.constructor.name
   }
 }
 
 /**
- * Shared by the errors about a single state name. Not exported: catch FlowStateError for
- * all of them, or a concrete kind for one.
+ * Shared by the errors that are about a single state name. It is not
+ * exported, so catch FlowStateError for all of them, or one of the
+ * concrete kinds below for a single case.
  */
 class StateNameError extends FlowStateError {
   #stateName
 
   /**
-   * Takes the name twice: inside the message for humans, on its own for code.
+   * The name is given twice, once inside the message for a human reader
+   * and once on its own so that code can read it.
    *
    * @param {string} message - What went wrong, in plain words.
    * @param {string} stateName - The state name the error is about.
@@ -38,7 +42,8 @@ class StateNameError extends FlowStateError {
   }
 
   /**
-   * Saves the caller from picking the message apart.
+   * The name is kept on its own, so the caller never has to pick the
+   * message apart to find it.
    *
    * @returns {string} - The state name the error is about.
    */
@@ -52,7 +57,7 @@ class StateNameError extends FlowStateError {
  */
 export class UnknownStateError extends StateNameError {
   /**
-   * Words the message; storing the name is the base class's job.
+   * Only the wording belongs here. The base class stores the name.
    *
    * @param {string} stateName - The name that could not be found.
    */
@@ -62,12 +67,12 @@ export class UnknownStateError extends StateNameError {
 }
 
 /**
- * Thrown when the same state name is defined twice. Overwriting the first one would throw
- * away its hooks without a word.
+ * Thrown when the same state name is defined twice, since overwriting the
+ * first one would silently throw away its hooks.
  */
 export class DuplicateStateError extends StateNameError {
   /**
-   * Words the message; storing the name is the base class's job.
+   * Only the wording belongs here. The base class stores the name.
    *
    * @param {string} stateName - The name that was already taken.
    */

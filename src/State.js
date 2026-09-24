@@ -7,7 +7,8 @@ export class State {
   #onExit
 
   /**
-   * Both hooks are optional; a state without them is just a name the machine can rest in.
+   * Both hooks are optional. A state without them is just a name
+   * that the machine can rest in.
    *
    * @param {string} name - Identifies the state within its machine.
    * @param {object} [options] - The hooks to run on the way in and out.
@@ -25,7 +26,7 @@ export class State {
   }
 
   /**
-   * Fixed once the state is built.
+   * The name is fixed once the state is built.
    *
    * @returns {string} - The name identifying this state.
    */
@@ -34,7 +35,7 @@ export class State {
   }
 
   /**
-   * Does nothing when no onEnter hook was given.
+   * Runs the onEnter hook, or does nothing if the state was given none.
    *
    * @param {object} context - The state machine's shared context.
    */
@@ -45,7 +46,7 @@ export class State {
   }
 
   /**
-   * Does nothing when no onExit hook was given.
+   * Runs the onExit hook, or does nothing if the state was given none.
    *
    * @param {object} context - The state machine's shared context.
    */

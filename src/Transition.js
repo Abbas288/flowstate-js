@@ -8,7 +8,8 @@ export class Transition {
   #guard
 
   /**
-   * Nothing is checked against a real machine, so a move may name states that do not exist.
+   * Nothing is checked against a real machine, so a move may name
+   * states that do not exist.
    *
    * @param {object} move - The three names that make up the move, plus an optional guard.
    * @param {string} move.from - Name of the state to leave.
@@ -32,7 +33,7 @@ export class Transition {
   }
 
   /**
-   * Where this transition starts.
+   * The machine must be in this state for the transition to be possible.
    *
    * @returns {string} - Name of the state it leaves.
    */
@@ -41,7 +42,7 @@ export class Transition {
   }
 
   /**
-   * May be the same state the transition leaves.
+   * This may be the same state that the transition leaves.
    *
    * @returns {string} - Name of the state it enters.
    */
@@ -50,7 +51,7 @@ export class Transition {
   }
 
   /**
-   * Transitions may share an event name if they leave different states.
+   * Two transitions may share an event name if they leave different states.
    *
    * @returns {string} - Name of the event that triggers this transition.
    */
@@ -59,7 +60,8 @@ export class Transition {
   }
 
   /**
-   * Compares names exactly, and answers false for a wrong type instead of throwing.
+   * Names are compared exactly. A value of the wrong type gives false
+   * rather than an error.
    *
    * @param {string} eventName - Name of the event to test.
    * @returns {boolean} - True if that event triggers this transition.
@@ -69,7 +71,8 @@ export class Transition {
   }
 
   /**
-   * No guard means always allowed. A guard runs on every call, so the answer can change.
+   * A transition without a guard is always allowed. A guard runs on
+   * every call, so its answer can change as the context changes.
    *
    * @param {object} context - The state machine's shared context.
    * @returns {boolean} - True if this transition may run right now.

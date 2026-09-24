@@ -13,7 +13,8 @@ export class StateMachine {
   #transitions = new TransitionRegistry()
 
   /**
-   * The starting state need not be defined yet, so build the machine first if you like.
+   * The starting state need not be defined yet, so a state can be
+   * defined after the machine that starts in it.
    *
    * @param {string} initialStateName - Name of the state the machine starts in.
    */
@@ -26,7 +27,7 @@ export class StateMachine {
   }
 
   /**
-   * Read only: the machine moves itself, nothing else may.
+   * Only the machine can change its own state, so this name cannot be written.
    *
    * @returns {string} - Name of the state the machine is in.
    */
@@ -35,7 +36,8 @@ export class StateMachine {
   }
 
   /**
-   * Defined, not reachable — defining a state connects it to nothing.
+   * A defined state is not the same as a reachable one, since defining
+   * a state connects it to nothing.
    *
    * @returns {string[]} - Names of every defined state, in definition order.
    */
@@ -44,7 +46,8 @@ export class StateMachine {
   }
 
   /**
-   * Checks name and hooks now, so a bad definition fails here, not on the first move.
+   * The name and the hooks are checked here, so a bad definition fails
+   * at once instead of on the first move.
    *
    * @param {string} name - Name the state is known by inside this machine.
    * @param {object} [options] - The hooks to run on the way in and out.
@@ -59,7 +62,8 @@ export class StateMachine {
   }
 
   /**
-   * The named states need not exist yet, so declare states and moves in any order.
+   * The named states need not exist yet, so states and transitions can
+   * be defined in any order.
    *
    * @param {object} move - The three names that make up the move, plus an optional guard.
    * @param {string} move.from - Name of the state to leave.
@@ -75,7 +79,8 @@ export class StateMachine {
   }
 
   /**
-   * Guards are not consulted, so a listed event may still be refused when you send it.
+   * Guards are not consulted, so a listed event may still be refused
+   * at the moment it is sent.
    *
    * @param {string} fromStateName - Name of the state to look out from.
    * @returns {string[]} - Names of the events leaving that state, in definition order.

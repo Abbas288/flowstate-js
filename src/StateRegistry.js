@@ -20,7 +20,7 @@ export class StateRegistry {
   }
 
   /**
-   * Answers without fetching the state behind the name.
+   * The answer comes without fetching the state behind the name.
    *
    * @param {string} name - The name to look for.
    * @returns {boolean} - True if a state with that name is registered.
@@ -30,7 +30,7 @@ export class StateRegistry {
   }
 
   /**
-   * Signals absence the way Map.get does, rather than throwing.
+   * A name that is not registered gives undefined, the way Map.get does.
    *
    * @param {string} name - The name to look for.
    * @returns {State|undefined} - The state under that name, or undefined if there is none.
