@@ -7,8 +7,7 @@ export class State {
   #onExit
 
   /**
-   * Builds a state. Both hooks are optional, and a state without them is simply a name
-   * the machine can rest in.
+   * Both hooks are optional; a state without them is just a name the machine can rest in.
    *
    * @param {string} name - Identifies the state within its machine.
    * @param {object} [options] - The hooks to run on the way in and out.
@@ -26,7 +25,7 @@ export class State {
   }
 
   /**
-   * Tells what this state is called. The name is fixed once the state is built.
+   * Fixed once the state is built.
    *
    * @returns {string} - The name identifying this state.
    */
@@ -35,7 +34,7 @@ export class State {
   }
 
   /**
-   * Runs this state's onEnter hook, if one was provided.
+   * Does nothing when no onEnter hook was given.
    *
    * @param {object} context - The state machine's shared context.
    */
@@ -46,7 +45,7 @@ export class State {
   }
 
   /**
-   * Runs this state's onExit hook, if one was provided.
+   * Does nothing when no onExit hook was given.
    *
    * @param {object} context - The state machine's shared context.
    */
@@ -59,7 +58,7 @@ export class State {
   /**
    * Throws unless the value can be used as this state's name.
    *
-   * @param {*} value - The value to check, of any type.
+   * @param {*} value - The value to check.
    */
   #requireName (value) {
     if (typeof value !== 'string' || value.trim() === '') {
@@ -68,10 +67,9 @@ export class State {
   }
 
   /**
-   * Throws unless the value is a function. Leaving a hook out is allowed, so undefined
-   * passes.
+   * Throws unless the value is a function. Hooks are optional, so undefined passes.
    *
-   * @param {*} value - The value to check, of any type.
+   * @param {*} value - The value to check.
    * @param {string} label - Hook name, used in the error message.
    */
   #requireOptionalHook (value, label) {

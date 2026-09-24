@@ -8,8 +8,7 @@ export class Transition {
   #guard
 
   /**
-   * Describes a move up front. Nothing is checked against a real machine here, so a
-   * transition can name states that do not exist yet.
+   * Nothing is checked against a real machine, so a move may name states that do not exist.
    *
    * @param {object} move - The three names that make up the move, plus an optional guard.
    * @param {string} move.from - Name of the state to leave.
@@ -33,26 +32,25 @@ export class Transition {
   }
 
   /**
-   * Tells where this transition starts.
+   * Where this transition starts.
    *
-   * @returns {string} - Name of the state this transition leaves.
+   * @returns {string} - Name of the state it leaves.
    */
   get fromStateName () {
     return this.#fromStateName
   }
 
   /**
-   * Tells where this transition ends. May be the same state it started in.
+   * May be the same state the transition leaves.
    *
-   * @returns {string} - Name of the state this transition enters.
+   * @returns {string} - Name of the state it enters.
    */
   get toStateName () {
     return this.#toStateName
   }
 
   /**
-   * Tells which event this transition listens for. Several transitions may share an
-   * event name as long as they leave different states.
+   * Transitions may share an event name if they leave different states.
    *
    * @returns {string} - Name of the event that triggers this transition.
    */
@@ -61,8 +59,7 @@ export class Transition {
   }
 
   /**
-   * Compares event names exactly. Anything that is not the right string, including a
-   * value of the wrong type, answers false rather than throwing.
+   * Compares names exactly, and answers false for a wrong type instead of throwing.
    *
    * @param {string} eventName - Name of the event to test.
    * @returns {boolean} - True if that event triggers this transition.
@@ -72,11 +69,10 @@ export class Transition {
   }
 
   /**
-   * Asks the guard, if there is one. A transition without a guard is always allowed.
-   * The guard runs on every call, so the answer can change as the context changes.
+   * No guard means always allowed. A guard runs on every call, so the answer can change.
    *
    * @param {object} context - The state machine's shared context.
-   * @returns {boolean} - True if this transition is allowed to run right now.
+   * @returns {boolean} - True if this transition may run right now.
    */
   isAllowedIn (context) {
     if (this.#guard === undefined) {
@@ -89,7 +85,7 @@ export class Transition {
   /**
    * Throws unless the value can be used as a name.
    *
-   * @param {*} value - The value to check, of any type.
+   * @param {*} value - The value to check.
    * @param {string} label - Field name, used in the error message.
    */
   #requireName (value, label) {

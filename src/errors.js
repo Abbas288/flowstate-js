@@ -7,7 +7,7 @@
  */
 export class FlowStateError extends Error {
   /**
-   * Names the error after its own class, so that a log line says which kind it was.
+   * Names the error after its own class, so a log line says which kind it was.
    *
    * @param {string} message - What went wrong, in plain words.
    */
@@ -19,15 +19,14 @@ export class FlowStateError extends Error {
 }
 
 /**
- * Shared by the errors that are about a single state name. Deliberately not exported:
- * catch FlowStateError to catch everything, or a concrete kind to catch one thing.
+ * Shared by the errors about a single state name. Not exported: catch FlowStateError for
+ * all of them, or a concrete kind for one.
  */
 class StateNameError extends FlowStateError {
   #stateName
 
   /**
-   * Takes the name twice over, once woven into the message for whoever reads the log and
-   * once on its own for whoever writes the catch block.
+   * Takes the name twice: inside the message for humans, on its own for code.
    *
    * @param {string} message - What went wrong, in plain words.
    * @param {string} stateName - The state name the error is about.
@@ -39,8 +38,7 @@ class StateNameError extends FlowStateError {
   }
 
   /**
-   * Tells which name the error is about, so a caller can report it without picking the
-   * message apart.
+   * Saves the caller from picking the message apart.
    *
    * @returns {string} - The state name the error is about.
    */
@@ -54,7 +52,7 @@ class StateNameError extends FlowStateError {
  */
 export class UnknownStateError extends StateNameError {
   /**
-   * Words the message. Storing the name is the base class's job.
+   * Words the message; storing the name is the base class's job.
    *
    * @param {string} stateName - The name that could not be found.
    */
@@ -69,7 +67,7 @@ export class UnknownStateError extends StateNameError {
  */
 export class DuplicateStateError extends StateNameError {
   /**
-   * Words the message. Storing the name is the base class's job.
+   * Words the message; storing the name is the base class's job.
    *
    * @param {string} stateName - The name that was already taken.
    */

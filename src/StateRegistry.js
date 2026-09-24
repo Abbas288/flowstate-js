@@ -7,7 +7,7 @@ export class StateRegistry {
   #statesByName = new Map()
 
   /**
-   * Stores a state so that it can later be found by its name.
+   * Stores a state under its own name. A repeated name replaces the earlier state.
    *
    * @param {State} state - The state to store.
    */
@@ -20,31 +20,29 @@ export class StateRegistry {
   }
 
   /**
-   * Checks whether a name is taken, without fetching the state behind it.
+   * Answers without fetching the state behind the name.
    *
    * @param {string} name - The name to look for.
-   * @returns {boolean} - True if a state with the given name is registered, false otherwise.
+   * @returns {boolean} - True if a state with that name is registered.
    */
   has (name) {
     return this.#statesByName.has(name)
   }
 
   /**
-   * Finds a registered state by its name.
+   * Signals absence the way Map.get does, rather than throwing.
    *
    * @param {string} name - The name to look for.
-   * @returns {State|undefined} - The state registered under the given name, or undefined
-   *   when no state with that name is registered.
+   * @returns {State|undefined} - The state under that name, or undefined if there is none.
    */
   get (name) {
     return this.#statesByName.get(name)
   }
 
   /**
-   * Lists what the machine knows about. A new array is built on every access.
+   * Builds a new array on every access, so the caller cannot change the registry.
    *
-   * @returns {string[]} - The names of every registered state, in the order they were
-   *   registered. The caller gets a copy and cannot change the registry through it.
+   * @returns {string[]} - Names of every registered state, in registration order.
    */
   get stateNames () {
     return [...this.#statesByName.keys()]
