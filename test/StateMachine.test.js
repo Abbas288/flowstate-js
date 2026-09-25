@@ -59,6 +59,46 @@ describe('StateMachine', () => {
     expect(() => new StateMachine('never-defined')).not.toThrow()
   })
 
+  it('starts with an empty context', () => {
+    const order = new StateMachine('placed')
+
+    expect(order.context).toEqual({})
+  })
+
+  it('keeps whatever is written into its context', () => {
+    const order = new StateMachine('placed')
+
+    order.context.amount = 250
+
+    expect(order.context.amount).toBe(250)
+  })
+
+  it('hands out the same context object every time', () => {
+    const order = new StateMachine('placed')
+
+    expect(order.context).toBe(order.context)
+  })
+
+  it('does not let the context be swapped for another object', () => {
+    const order = new StateMachine('placed')
+    order.context.amount = 250
+
+    expect(() => { order.context = { amount: 0 } }).toThrow(TypeError)
+    expect(order.context.amount).toBe(250)
+  })
+
+  it('gives each machine a context of its own', () => {
+    const order = new StateMachine('placed')
+    const invoice = new StateMachine('placed')
+
+    order.context.amount = 250
+    invoice.context.amount = 90
+
+    expect(order.context).not.toBe(invoice.context)
+    expect(order.context.amount).toBe(250)
+    expect(invoice.context.amount).toBe(90)
+  })
+
   it('knows about no states before any are defined', () => {
     const order = new StateMachine('placed')
 

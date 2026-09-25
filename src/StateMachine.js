@@ -10,6 +10,7 @@ import { UnknownStateError } from './errors.js'
  */
 export class StateMachine {
   #currentStateName
+  #context = {}
   #states = new StateRegistry()
   #transitions = new TransitionRegistry()
 
@@ -34,6 +35,16 @@ export class StateMachine {
    */
   get currentStateName () {
     return this.#currentStateName
+  }
+
+  /**
+   * The object itself is handed out rather than a copy, so that hooks, guards
+   * and the caller all write to the same place. Only the reference is fixed.
+   *
+   * @returns {object} - The context every hook and guard is handed.
+   */
+  get context () {
+    return this.#context
   }
 
   /**
