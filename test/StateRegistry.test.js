@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { State } from '../src/State.js'
 import { StateRegistry } from '../src/StateRegistry.js'
+import { DuplicateStateError } from '../src/errors.js'
 
 describe('StateRegistry', () => {
   it('finds a state that has been registered', () => {
@@ -82,5 +83,38 @@ describe('StateRegistry', () => {
     for (const nonState of nonStates) {
       expect(() => registry.register(nonState)).toThrow(TypeError)
     }
+  })
+
+  it('rejects a name that is already registered', () => {
+    const registry = new StateRegistry()
+    registry.register(new State('paid'))
+
+    expect(() => registry.register(new State('paid'))).toThrow(DuplicateStateError)
+  })
+
+  it('names the rejected state in the error', () => {
+    const registry = new StateRegistry()
+    registry.register(new State('paid'))
+
+    expect(() => registry.register(new State('paid'))).toThrow(/paid/)
+  })
+
+  it('keeps the first state when it rejects a duplicate name', () => {
+    const registry = new StateRegistry()
+    const firstPaid = new State('paid')
+    registry.register(firstPaid)
+
+    expect(() => registry.register(new State('paid'))).toThrow(DuplicateStateError)
+    expect(registry.get('paid')).toBe(firstPaid)
+  })
+
+  it('still accepts a different name after rejecting a duplicate', () => {
+    const registry = new StateRegistry()
+    registry.register(new State('paid'))
+
+    expect(() => registry.register(new State('paid'))).toThrow(DuplicateStateError)
+    registry.register(new State('shipped'))
+
+    expect(registry.stateNames).toEqual(['paid', 'shipped'])
   })
 })

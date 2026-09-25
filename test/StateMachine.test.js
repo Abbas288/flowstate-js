@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { StateMachine } from '../src/StateMachine.js'
+import { DuplicateStateError, FlowStateError } from '../src/errors.js'
 
 const invalidNames = [undefined, null, '', '   ', 42, {}, ['placed']]
 const invalidFunctions = ['always', 42, {}, null, true, ['guard']]
@@ -86,6 +87,41 @@ describe('StateMachine', () => {
     const order = new StateMachine('placed')
 
     expect(() => order.defineState('paid')).not.toThrow()
+  })
+
+  it('refuses to define the same state name twice', () => {
+    const order = new StateMachine('placed')
+
+    order.defineState('paid')
+
+    expect(() => order.defineState('paid')).toThrow(DuplicateStateError)
+  })
+
+  it('refuses a name that is taken even when the hooks differ', () => {
+    const order = new StateMachine('placed')
+
+    order.defineState('paid', { onEnter: () => {} })
+
+    expect(() => order.defineState('paid', { onExit: () => {} }))
+      .toThrow(DuplicateStateError)
+  })
+
+  it('treats a taken name as a broken machine rule, not as a bad argument', () => {
+    const order = new StateMachine('placed')
+
+    order.defineState('paid')
+
+    expect(() => order.defineState('paid')).toThrow(FlowStateError)
+    expect(() => order.defineState('paid')).not.toThrow(TypeError)
+  })
+
+  it('does not list a name twice when it refuses a duplicate', () => {
+    const order = new StateMachine('placed')
+
+    order.defineState('paid')
+    expect(() => order.defineState('paid')).toThrow(DuplicateStateError)
+
+    expect(order.stateNames).toEqual(['paid'])
   })
 
   it('cannot be changed through the list of names it returns', () => {

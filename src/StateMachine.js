@@ -46,8 +46,8 @@ export class StateMachine {
   }
 
   /**
-   * The name and the hooks are checked here, so a bad definition fails
-   * at once instead of on the first move.
+   * The name and the hooks are checked here, so a bad definition fails at
+   * once instead of on the first move. A name can be defined only once.
    *
    * @param {string} name - Name the state is known by inside this machine.
    * @param {object} [options] - The hooks to run on the way in and out.

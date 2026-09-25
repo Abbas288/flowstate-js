@@ -1,4 +1,5 @@
 import { State } from './State.js'
+import { DuplicateStateError } from './errors.js'
 
 /**
  * Stores the states belonging to one machine and looks them up by name.
@@ -7,13 +8,18 @@ export class StateRegistry {
   #statesByName = new Map()
 
   /**
-   * Stores a state under its own name. A repeated name replaces the earlier state.
+   * Stores a state under its own name. A name can be used only once, since
+   * replacing a state would silently throw away the earlier one's hooks.
    *
    * @param {State} state - The state to store.
    */
   register (state) {
     if (!(state instanceof State)) {
       throw new TypeError('Only State instances can be registered.')
+    }
+
+    if (this.#statesByName.has(state.name)) {
+      throw new DuplicateStateError(state.name)
     }
 
     this.#statesByName.set(state.name, state)
