@@ -2,6 +2,7 @@ import { State } from './State.js'
 import { StateRegistry } from './StateRegistry.js'
 import { Transition } from './Transition.js'
 import { TransitionRegistry } from './TransitionRegistry.js'
+import { UnknownStateError } from './errors.js'
 
 /**
  * A machine that is in exactly one state at a time, and that can be asked about the
@@ -62,8 +63,8 @@ export class StateMachine {
   }
 
   /**
-   * The named states need not exist yet, so states and transitions can
-   * be defined in any order.
+   * Both named states must already be defined, so that the graph can never
+   * point at a state that does not exist.
    *
    * @param {object} move - The three names that make up the move, plus an optional guard.
    * @param {string} move.from - Name of the state to leave.
@@ -73,7 +74,12 @@ export class StateMachine {
    * @returns {StateMachine} - This machine, so that definitions can be chained.
    */
   defineTransition (move) {
-    this.#transitions.register(new Transition(move))
+    const transition = new Transition(move)
+
+    this.#requireDefinedState(transition.fromStateName)
+    this.#requireDefinedState(transition.toStateName)
+
+    this.#transitions.register(transition)
 
     return this
   }
@@ -89,5 +95,16 @@ export class StateMachine {
     return this.#transitions
       .transitionsFrom(fromStateName)
       .map((transition) => transition.eventName)
+  }
+
+  /**
+   * Throws unless a state with that name has been defined on this machine.
+   *
+   * @param {string} stateName - The name to look for.
+   */
+  #requireDefinedState (stateName) {
+    if (!this.#states.has(stateName)) {
+      throw new UnknownStateError(stateName)
+    }
   }
 }

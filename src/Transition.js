@@ -8,8 +8,8 @@ export class Transition {
   #guard
 
   /**
-   * Nothing is checked against a real machine, so a move may name
-   * states that do not exist.
+   * The names are not checked against a machine here. 
+   * StateMachine does the checking when the transition is defined on it.
    *
    * @param {object} move - The three names that make up the move, plus an optional guard.
    * @param {string} move.from - Name of the state to leave.
