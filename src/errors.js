@@ -80,3 +80,44 @@ export class DuplicateStateError extends StateNameError {
     super(`A state named "${stateName}" is already defined.`, stateName)
   }
 }
+
+/**
+ * Thrown when no transition leaves the current state on the event that was sent.
+ * Both names are carried, because either one may be perfectly good on its own and
+ * only the pair is at fault.
+ */
+export class NoTransitionError extends FlowStateError {
+  #fromStateName
+  #eventName
+
+  /**
+   * The message names both, so a log line on its own points at the missing edge.
+   *
+   * @param {string} fromStateName - Name of the state the machine is in.
+   * @param {string} eventName - Name of the event that was sent.
+   */
+  constructor (fromStateName, eventName) {
+    super(`No transition from state "${fromStateName}" on event "${eventName}".`)
+
+    this.#fromStateName = fromStateName
+    this.#eventName = eventName
+  }
+
+  /**
+   * The machine is still in this state, since a refused event changes nothing.
+   *
+   * @returns {string} - Name of the state the machine was in.
+   */
+  get fromStateName () {
+    return this.#fromStateName
+  }
+
+  /**
+   * This is the name exactly as it was sent, not a cleaned-up form of it.
+   *
+   * @returns {string} - Name of the event that was sent.
+   */
+  get eventName () {
+    return this.#eventName
+  }
+}

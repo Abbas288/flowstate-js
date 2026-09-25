@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { DuplicateStateError, FlowStateError, UnknownStateError } from '../src/errors.js'
+import {
+  DuplicateStateError,
+  FlowStateError,
+  NoTransitionError,
+  UnknownStateError,
+} from '../src/errors.js'
 
 const stateErrors = [
   ['UnknownStateError', UnknownStateError],
@@ -52,9 +57,57 @@ describe.each(stateErrors)('%s', (className, StateError) => {
   })
 })
 
+describe('NoTransitionError', () => {
+  it('can be caught as a FlowStateError', () => {
+    expect(new NoTransitionError('placed', 'ship')).toBeInstanceOf(FlowStateError)
+  })
+
+  it('is named after its own class, not after the base class', () => {
+    expect(new NoTransitionError('placed', 'ship').name).toBe('NoTransitionError')
+  })
+
+  it('names both the state and the event in its message', () => {
+    const error = new NoTransitionError('placed', 'ship')
+
+    expect(error.message).toContain('placed')
+    expect(error.message).toContain('ship')
+  })
+
+  it('hands out both names without parsing the message', () => {
+    const error = new NoTransitionError('placed', 'ship')
+
+    expect(error.fromStateName).toBe('placed')
+    expect(error.eventName).toBe('ship')
+  })
+
+  it('does not let either name be written from outside', () => {
+    const error = new NoTransitionError('placed', 'ship')
+
+    expect(() => { error.fromStateName = 'paid' }).toThrow(TypeError)
+    expect(() => { error.eventName = 'pay' }).toThrow(TypeError)
+    expect(error.fromStateName).toBe('placed')
+    expect(error.eventName).toBe('ship')
+  })
+
+  it('is not one of the errors about a single state name', () => {
+    const error = new NoTransitionError('placed', 'ship')
+
+    expect(error).not.toBeInstanceOf(UnknownStateError)
+    expect(error).not.toBeInstanceOf(DuplicateStateError)
+  })
+
+  it('offers no stateName, since two names are in play', () => {
+    expect(new NoTransitionError('placed', 'ship').stateName).toBeUndefined()
+  })
+})
+
 describe('the error family', () => {
   it('lets one catch handle every kind the module throws', () => {
-    const thrown = [new UnknownStateError('paid'), new DuplicateStateError('paid')]
+    const thrown = [
+      new UnknownStateError('paid'),
+      new DuplicateStateError('paid'),
+      new NoTransitionError('placed', 'ship'),
+    ]
 
     for (const error of thrown) {
       expect(error).toBeInstanceOf(FlowStateError)
