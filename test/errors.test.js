@@ -66,10 +66,10 @@ describe('the error family', () => {
     expect(new DuplicateStateError('paid')).not.toBeInstanceOf(UnknownStateError)
   })
 
-  it('says different things about the same name', () => {
-    const unknown = new UnknownStateError('paid').message
-    const duplicate = new DuplicateStateError('paid').message
+  it('says different things about the same state name', () => {
+    const unknownStateMessage = new UnknownStateError('paid').message
+    const duplicateStateMessage = new DuplicateStateError('paid').message
 
-    expect(unknown).not.toBe(duplicate)
+    expect(unknownStateMessage).not.toBe(duplicateStateMessage)
   })
 })
