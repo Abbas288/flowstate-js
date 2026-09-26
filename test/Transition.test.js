@@ -44,7 +44,7 @@ describe('Transition', () => {
     expect(transition.isTriggeredBy('Pay')).toBe(false)
   })
 
-  it('answers false instead of throwing exception when asked about a non-string', () => {
+  it('answers false instead of throwing an error when asked about a non-string', () => {
     const transition = new Transition(validMove)
 
     for (const invalidName of invalidNames) {

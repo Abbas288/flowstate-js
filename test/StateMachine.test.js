@@ -160,7 +160,7 @@ describe('StateMachine', () => {
     expect(() => order.defineState('paid')).toThrow(DuplicateStateError)
   })
 
-  it('refuses a name that is taken even when the hooks differ', () => {
+  it('refuses a duplicate state name even when the hooks differ', () => {
     const order = new StateMachine('placed')
 
     order.defineState('paid', { onEnter: () => {} })
@@ -169,7 +169,7 @@ describe('StateMachine', () => {
       .toThrow(DuplicateStateError)
   })
 
-  it('treats a taken name as a broken machine rule, not as a bad argument', () => {
+  it('throws a FlowStateError, not a TypeError, for a duplicate state name', () => {
     const order = new StateMachine('placed')
 
     order.defineState('paid')
@@ -178,7 +178,7 @@ describe('StateMachine', () => {
     expect(() => order.defineState('paid')).not.toThrow(TypeError)
   })
 
-  it('does not list a name twice when it refuses a duplicate', () => {
+  it('does not list a state name twice when it refuses a duplicate', () => {
     const order = new StateMachine('placed')
 
     order.defineState('paid')
@@ -267,7 +267,7 @@ describe('StateMachine', () => {
     expect(order.eventNamesFrom('placed')).toEqual(['pay'])
   })
 
-  it('accepts a transition that leads back into the state it leaves', () => {
+  it('accepts a transition that starts and ends in the same state', () => {
     const order = machineWithStates('placed')
 
     order.defineTransition({ from: 'placed', to: 'placed', on: 'edit' })
@@ -299,28 +299,28 @@ describe('StateMachine', () => {
     expect(() => order.defineTransition()).toThrow(TypeError)
   })
 
-  it('refuses a transition that leaves a state it has never heard of', () => {
+  it('refuses a transition from a state that was never defined', () => {
     const order = machineWithStates('placed', 'paid')
 
     expect(() => order.defineTransition({ from: 'packed', to: 'paid', on: 'pay' }))
       .toThrow(UnknownStateError)
   })
 
-  it('refuses a transition that leads to a state it has never heard of', () => {
+  it('refuses a transition to a state that was never defined', () => {
     const order = machineWithStates('placed', 'paid')
 
     expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' }))
       .toThrow(UnknownStateError)
   })
 
-  it('names the state it could not find', () => {
+  it('names the state that was never defined in the error', () => {
     const order = machineWithStates('placed', 'paid')
 
     expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' }))
       .toThrow(/shipped/)
   })
 
-  it('treats an unknown state as a broken machine rule, not as a bad argument', () => {
+  it('throws a FlowStateError, not a TypeError, for a state that was never defined', () => {
     const order = machineWithStates('placed', 'paid')
     const moveToUnknownState = { from: 'placed', to: 'shipped', on: 'ship' }
 
@@ -328,7 +328,7 @@ describe('StateMachine', () => {
     expect(() => order.defineTransition(moveToUnknownState)).not.toThrow(TypeError)
   })
 
-  it('checks the shape of a move before it looks up the states', () => {
+  it('checks the field types before it checks that the states exist', () => {
     const order = machineWithStates('placed', 'paid')
 
     expect(() => order.defineTransition({ from: 42, to: 'shipped', on: 'ship' }))
@@ -344,7 +344,7 @@ describe('StateMachine', () => {
     expect(order.eventNamesFrom('placed')).toEqual([])
   })
 
-  it('moves to the state the event leads to', () => {
+  it('moves along the transition the event triggers', () => {
     const order = machineWithStates('placed', 'paid')
     order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
@@ -372,7 +372,7 @@ describe('StateMachine', () => {
     expect(order.currentStateName).toBe('shipped')
   })
 
-  it('picks the transition that leaves the state it is in right now', () => {
+  it('picks the transition that leaves its current state', () => {
     const order = machineWithStates('placed', 'paid', 'shipped')
     // Current state is 'placed', so the first transition is the one that matters
     order.defineTransition({ from: 'placed', to: 'paid', on: 'go' })
@@ -383,7 +383,7 @@ describe('StateMachine', () => {
     expect(order.currentStateName).toBe('paid')
   })
 
-  it('can move back into the state it is already in', () => {
+  it('can take a transition that starts and ends in the same state', () => {
     const order = machineWithStates('placed')
     order.defineTransition({ from: 'placed', to: 'placed', on: 'edit' })
 

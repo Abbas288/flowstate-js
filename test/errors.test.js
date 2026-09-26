@@ -96,13 +96,13 @@ describe('NoTransitionError', () => {
     expect(error).not.toBeInstanceOf(DuplicateStateError)
   })
 
-  it('offers no stateName, since two names are in play', () => {
+  it('has no stateName, since it carries two names', () => {
     expect(new NoTransitionError('placed', 'ship').stateName).toBeUndefined()
   })
 })
 
 describe('the error family', () => {
-  it('lets one catch handle every kind the module throws', () => {
+  it('lets one catch handle every error the module throws', () => {
     const thrown = [
       new UnknownStateError('paid'),
       new DuplicateStateError('paid'),
