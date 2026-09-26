@@ -2,7 +2,7 @@ import { State } from './State.js'
 import { StateRegistry } from './StateRegistry.js'
 import { Transition } from './Transition.js'
 import { TransitionRegistry } from './TransitionRegistry.js'
-import { UnknownStateError } from './errors.js'
+import { NoTransitionError, UnknownStateError } from './errors.js'
 
 /**
  * A machine that is in exactly one state at a time, and that can be asked about the
@@ -21,9 +21,7 @@ export class StateMachine {
    * @param {string} initialStateName - Name of the state the machine starts in.
    */
   constructor (initialStateName) {
-    if (typeof initialStateName !== 'string' || initialStateName.trim() === '') {
-      throw new TypeError('Initial state name must be a non-empty string.')
-    }
+    this.#requireName(initialStateName, 'Initial state name')
 
     this.#currentStateName = initialStateName
   }
@@ -96,6 +94,27 @@ export class StateMachine {
   }
 
   /**
+   * Moves the machine along the transition that the event triggers. Nothing is
+   * returned, so that changing the machine stays separate from asking about it.
+   *
+   * The move is unconditional: no guard is consulted and no hook is run.
+   *
+   * @param {string} eventName - Name of the event to send.
+   */
+  send (eventName) {
+    this.#requireName(eventName, 'Event name')
+    this.#requireDefinedState(this.#currentStateName)
+
+    const transition = this.#transitions.find(this.#currentStateName, eventName)
+
+    if (transition === undefined) {
+      throw new NoTransitionError(this.#currentStateName, eventName)
+    }
+
+    this.#currentStateName = transition.toStateName
+  }
+
+  /**
    * Guards are not consulted, so a listed event may still be refused
    * at the moment it is sent.
    *
@@ -106,6 +125,18 @@ export class StateMachine {
     return this.#transitions
       .transitionsFrom(fromStateName)
       .map((transition) => transition.eventName)
+  }
+
+  /**
+   * Throws unless the value can be used as a name.
+   *
+   * @param {*} value - The value to check.
+   * @param {string} label - What the name is for, used to open the error message.
+   */
+  #requireName (value, label) {
+    if (typeof value !== 'string' || value.trim() === '') {
+      throw new TypeError(`${label} must be a non-empty string.`)
+    }
   }
 
   /**
