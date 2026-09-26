@@ -97,7 +97,9 @@ export class StateMachine {
    * Moves the machine along the transition that the event triggers. Nothing is
    * returned, so that changing the machine stays separate from asking about it.
    *
-   * The move is unconditional: no guard is consulted and no hook is run.
+   * The state being left runs its exit hook, then the state being entered runs its
+   * enter hook, both with the shared context. An error from a hook reaches the
+   * caller as it is. No guard is consulted.
    *
    * @param {string} eventName - Name of the event to send.
    */
@@ -111,7 +113,12 @@ export class StateMachine {
       throw new NoTransitionError(this.#currentStateName, eventName)
     }
 
-    this.#currentStateName = transition.toStateName
+    const fromState = this.#states.get(transition.fromStateName)
+    const toState = this.#states.get(transition.toStateName)
+
+    fromState.exit(this.#context)
+    this.#currentStateName = toState.name
+    toState.enter(this.#context)
   }
 
   /**

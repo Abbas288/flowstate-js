@@ -449,16 +449,97 @@ describe('StateMachine', () => {
     expect(order.currentStateName).toBe('paid')
   })
 
-  it('currently runs no hook on the state it leaves or the state it enters', () => {
+  it('runs the exit hook, then the enter hook, and no other hook', () => {
+    const calls = []
+    const order = new StateMachine('placed')
+    order.defineState('placed', {
+      onEnter: () => calls.push('enter placed'),
+      onExit: () => calls.push('exit placed'),
+    })
+    order.defineState('paid', {
+      onEnter: () => calls.push('enter paid'),
+      onExit: () => calls.push('exit paid'),
+    })
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    order.send('pay')
+
+    expect(calls).toEqual(['exit placed', 'enter paid'])
+  })
+
+  it('passes its own context object to the exit and enter hooks', () => {
+    const receivedContexts = []
+    const order = new StateMachine('placed')
+    order.defineState('placed', { onExit: (ctx) => receivedContexts.push(ctx) })
+    order.defineState('paid', { onEnter: (ctx) => receivedContexts.push(ctx) })
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    order.send('pay')
+
+    expect(receivedContexts).toHaveLength(2)
+    expect(receivedContexts[0]).toBe(order.context)
+    expect(receivedContexts[1]).toBe(order.context)
+  })
+
+  it('moves after the exit hook runs and before the enter hook runs', () => {
+    const stateNamesSeenByHooks = []
+    const order = new StateMachine('placed')
+    order.defineState('placed', {
+      onExit: () => stateNamesSeenByHooks.push(order.currentStateName),
+    })
+    order.defineState('paid', {
+      onEnter: () => stateNamesSeenByHooks.push(order.currentStateName),
+    })
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    order.send('pay')
+
+    expect(stateNamesSeenByHooks).toEqual(['placed', 'paid'])
+  })
+
+  it('runs the exit and enter hooks when leaving and re-entering the same state', () => {
+    const calls = []
+    const order = new StateMachine('placed')
+    order.defineState('placed', {
+      onEnter: () => calls.push('enter'),
+      onExit: () => calls.push('exit'),
+    })
+    order.defineTransition({ from: 'placed', to: 'placed', on: 'edit' })
+
+    order.send('edit')
+
+    expect(calls).toEqual(['exit', 'enter'])
+  })
+
+  it('runs no hook when it refuses the event', () => {
     const calls = []
     const order = new StateMachine('placed')
     order.defineState('placed', { onExit: () => calls.push('exit') })
     order.defineState('paid', { onEnter: () => calls.push('enter') })
     order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
-    order.send('pay')
-
+    expect(() => order.send('ship')).toThrow(NoTransitionError)
     expect(calls).toEqual([])
+  })
+
+  it('stays in the state it was in when the exit hook throws an error', () => {
+    const order = new StateMachine('placed')
+    order.defineState('placed', { onExit: () => { throw new Error('exit failed') } })
+    order.defineState('paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    expect(() => order.send('pay')).toThrow('exit failed')
+    expect(order.currentStateName).toBe('placed')
+  })
+
+  it('has already moved when the enter hook throws an error', () => {
+    const order = new StateMachine('placed')
+    order.defineState('placed')
+    order.defineState('paid', { onEnter: () => { throw new Error('enter failed') } })
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    expect(() => order.send('pay')).toThrow('enter failed')
+    expect(order.currentStateName).toBe('paid')
   })
 
   it('cannot be changed through the list of events it returns', () => {
