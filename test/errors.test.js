@@ -7,6 +7,7 @@ import {
   NoTransitionError,
   UnknownStateError,
 } from '../src/errors.js'
+import * as errorModule from '../src/errors.js'
 
 const stateErrors = [
   ['UnknownStateError', UnknownStateError],
@@ -152,6 +153,16 @@ describe('BlockedTransitionError', () => {
 })
 
 describe('the error family', () => {
+  it('exports the error types a caller can catch, and nothing else', () => {
+    expect(Object.keys(errorModule).sort()).toEqual([
+      'BlockedTransitionError',
+      'DuplicateStateError',
+      'FlowStateError',
+      'NoTransitionError',
+      'UnknownStateError',
+    ])
+  })
+
   it('lets one catch handle every error the module throws', () => {
     const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
     const thrown = [

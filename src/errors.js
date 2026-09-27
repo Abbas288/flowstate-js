@@ -8,7 +8,7 @@ import { Transition } from './Transition.js'
  * non-function guard throws the built-in TypeError, because the mistake is
  * in the calling code rather than in the machine.
  */
-export class FlowStateError extends Error {
+class FlowStateError extends Error {
   /**
    * Names the error after its own class, so a log line says which kind it was.
    *
@@ -57,7 +57,7 @@ class StateNameError extends FlowStateError {
 /**
  * Thrown when a state name is used that was never defined.
  */
-export class UnknownStateError extends StateNameError {
+class UnknownStateError extends StateNameError {
   /**
    * Only the wording belongs here. The base class stores the name.
    *
@@ -72,7 +72,7 @@ export class UnknownStateError extends StateNameError {
  * Thrown when the same state name is defined twice, since overwriting the
  * first one would silently throw away its hooks.
  */
-export class DuplicateStateError extends StateNameError {
+class DuplicateStateError extends StateNameError {
   /**
    * Only the wording belongs here. The base class stores the name.
    *
@@ -131,7 +131,7 @@ class RefusedEventError extends FlowStateError {
  * Both names are carried, because either one may be perfectly good on its own and
  * only the pair is at fault.
  */
-export class NoTransitionError extends RefusedEventError {
+class NoTransitionError extends RefusedEventError {
   /**
    * The message names both, so a log line on its own points at the missing edge.
    *
@@ -151,7 +151,7 @@ export class NoTransitionError extends RefusedEventError {
  * Thrown when a transition exists for the event but its guard refuses it. Unlike a
  * missing transition, the same event may succeed later, once the context changes.
  */
-export class BlockedTransitionError extends RefusedEventError {
+class BlockedTransitionError extends RefusedEventError {
   #toStateName
 
   /**
@@ -178,4 +178,20 @@ export class BlockedTransitionError extends RefusedEventError {
   get toStateName () {
     return this.#toStateName
   }
+}
+
+/*
+ * What a caller can catch: FlowStateError for all of the machine's own errors,
+ * or one concrete kind to handle a single case.
+ *
+ * StateNameError and RefusedEventError stay inside the file. They only share fields
+ * between the errors that extend them, so no caller needs them, and keeping them
+ * private leaves the hierarchy free to change without breaking anyone.
+ */
+export {
+  FlowStateError,
+  UnknownStateError,
+  DuplicateStateError,
+  NoTransitionError,
+  BlockedTransitionError,
 }
