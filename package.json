@@ -7,7 +7,9 @@
   "scripts": {
     "test": "vitest run",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "prettier --write . && eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=18"
@@ -15,6 +17,8 @@
   "devDependencies": {
     "@lnu/eslint-config": "^2.0.13",
     "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.9",
     "vitest": "^5.0.1"
   }
 }
