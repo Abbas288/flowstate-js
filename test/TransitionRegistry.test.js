@@ -5,6 +5,21 @@ import { TransitionRegistry } from '../src/TransitionRegistry.js'
 const payMove = { from: 'placed', to: 'paid', on: 'pay' }
 const shipMove = { from: 'paid', to: 'shipped', on: 'ship' }
 
+/**
+ * Checks that exactly these transitions came back, in this order. toEqual cannot do
+ * it, because a transition keeps its fields private and so every one looks alike.
+ *
+ * @param {Transition[]} actual - The transitions that came back.
+ * @param {Transition[]} expected - The very transitions that should have come back.
+ */
+const expectSameTransitions = (actual, expected) => {
+  expect(actual).toHaveLength(expected.length)
+
+  expected.forEach((transition, index) => {
+    expect(actual[index]).toBe(transition)
+  })
+}
+
 describe('TransitionRegistry', () => {
   it('finds a transition by the state it leaves and the event it answers to', () => {
     const registry = new TransitionRegistry()
@@ -12,27 +27,27 @@ describe('TransitionRegistry', () => {
 
     registry.register(pay)
 
-    expect(registry.find('placed', 'pay')).toBe(pay)
+    expectSameTransitions(registry.findAll('placed', 'pay'), [pay])
   })
 
   it('finds nothing while empty', () => {
     const registry = new TransitionRegistry()
 
-    expect(registry.find('placed', 'pay')).toBeUndefined()
+    expect(registry.findAll('placed', 'pay')).toEqual([])
   })
 
   it('finds nothing when the event does not match', () => {
     const registry = new TransitionRegistry()
     registry.register(new Transition(payMove))
 
-    expect(registry.find('placed', 'ship')).toBeUndefined()
+    expect(registry.findAll('placed', 'ship')).toEqual([])
   })
 
   it('finds nothing when the state does not match', () => {
     const registry = new TransitionRegistry()
     registry.register(new Transition(payMove))
 
-    expect(registry.find('paid', 'pay')).toBeUndefined()
+    expect(registry.findAll('paid', 'pay')).toEqual([])
   })
 
   it('tells two transitions apart that share an event name', () => {
@@ -43,11 +58,11 @@ describe('TransitionRegistry', () => {
     registry.register(cancelPlaced)
     registry.register(cancelPaid)
 
-    expect(registry.find('placed', 'cancel')).toBe(cancelPlaced)
-    expect(registry.find('paid', 'cancel')).toBe(cancelPaid)
+    expectSameTransitions(registry.findAll('placed', 'cancel'), [cancelPlaced])
+    expectSameTransitions(registry.findAll('paid', 'cancel'), [cancelPaid])
   })
 
-  it('returns the first match when two transitions are alike', () => {
+  it('finds every match in registration order, alike ones included', () => {
     const registry = new TransitionRegistry()
     const first = new Transition(payMove)
     const second = new Transition(payMove)
@@ -55,7 +70,7 @@ describe('TransitionRegistry', () => {
     registry.register(first)
     registry.register(second)
 
-    expect(registry.find('placed', 'pay')).toBe(first)
+    expectSameTransitions(registry.findAll('placed', 'pay'), [first, second])
   })
 
   it('ignores guards when searching', () => {
@@ -64,7 +79,7 @@ describe('TransitionRegistry', () => {
 
     registry.register(guardedPay)
 
-    expect(registry.find('placed', 'pay')).toBe(guardedPay)
+    expectSameTransitions(registry.findAll('placed', 'pay'), [guardedPay])
   })
 
   it('keeps registries independent of each other', () => {
@@ -73,7 +88,16 @@ describe('TransitionRegistry', () => {
 
     orders.register(new Transition(payMove))
 
-    expect(invoices.find('placed', 'pay')).toBeUndefined()
+    expect(invoices.findAll('placed', 'pay')).toEqual([])
+  })
+
+  it('cannot be changed through the matches it returns', () => {
+    const registry = new TransitionRegistry()
+    registry.register(new Transition(payMove))
+
+    registry.findAll('placed', 'pay').push(new Transition(payMove))
+
+    expect(registry.findAll('placed', 'pay')).toHaveLength(1)
   })
 
   it('lists every way out of a state, in registration order', () => {
@@ -144,15 +168,5 @@ describe('TransitionRegistry', () => {
     for (const nonTransition of nonTransitions) {
       expect(() => registry.register(nonTransition)).toThrow(TypeError)
     }
-  })
-
-  it('keeps every registered transition, even alike ones', () => {
-    const registry = new TransitionRegistry()
-
-    registry.register(new Transition(payMove))
-    registry.register(new Transition(shipMove))
-
-    expect(registry.find('placed', 'pay')).toBeDefined()
-    expect(registry.find('paid', 'ship')).toBeDefined()
   })
 })

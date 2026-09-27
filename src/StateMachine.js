@@ -97,11 +97,10 @@ export class StateMachine {
    * Moves the machine along the transition that the event triggers. Nothing is
    * returned, so that changing the machine stays separate from asking about it.
    *
-   * The transition's guard is asked first, and nothing happens unless it allows the
-   * move. Then the state being left runs its exit hook and the state being entered
-   * runs its enter hook. Guard and hooks all get the shared context, and an error
-   * from any of them reaches the caller as it is. Only the first transition defined
-   * for the event is tried.
+   * Of the transitions the event triggers, the first one whose guard allows the move
+   * is taken, and nothing happens if none does. Then the state being left runs its
+   * exit hook and the state being entered runs its enter hook. Guards and hooks all
+   * get the shared context, and an error from any of them reaches the caller as it is.
    *
    * @param {string} eventName - Name of the event to send.
    */
@@ -109,14 +108,16 @@ export class StateMachine {
     this.#requireName(eventName, 'Event name')
     this.#requireDefinedState(this.#currentStateName)
 
-    const transition = this.#transitions.find(this.#currentStateName, eventName)
+    const candidates = this.#transitions.findAll(this.#currentStateName, eventName)
 
-    if (transition === undefined) {
+    if (candidates.length === 0) {
       throw new NoTransitionError(this.#currentStateName, eventName)
     }
 
-    if (!transition.isAllowedIn(this.#context)) {
-      throw new BlockedTransitionError(transition)
+    const transition = candidates.find((candidate) => candidate.isAllowedIn(this.#context))
+
+    if (transition === undefined) {
+      throw new BlockedTransitionError(candidates[0])
     }
 
     const fromState = this.#states.get(transition.fromStateName)

@@ -547,12 +547,53 @@ describe('StateMachine', () => {
     expect(order.currentStateName).toBe('placed')
   })
 
-  it('currently ignores a second transition on the same event', () => {
+  it('takes the first transition on the event whose guard allows it', () => {
     const order = machineWithStates('placed', 'paid', 'rejected')
     order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
     order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => true })
 
-    expect(() => order.send('pay')).toThrow(BlockedTransitionError)
+    order.send('pay')
+
+    expect(order.currentStateName).toBe('rejected')
+  })
+
+  it('takes the earlier of two transitions whose guards both allow it', () => {
+    const order = machineWithStates('placed', 'paid', 'rejected')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => true })
+    order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => true })
+
+    order.send('pay')
+
+    expect(order.currentStateName).toBe('paid')
+  })
+
+  it('does not ask a later guard once an earlier one allows the move', () => {
+    let laterGuardWasAsked = false
+    const order = machineWithStates('placed', 'paid', 'rejected')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => true })
+    order.defineTransition({
+      from: 'placed',
+      to: 'rejected',
+      on: 'pay',
+      guard: () => {
+        laterGuardWasAsked = true
+
+        return true
+      },
+    })
+
+    order.send('pay')
+
+    expect(laterGuardWasAsked).toBe(false)
+  })
+
+  it('reports the first transition when every guard on the event blocks', () => {
+    const order = machineWithStates('placed', 'paid', 'rejected')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
+    order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => false })
+
+    expect(() => order.send('pay'))
+      .toThrow(expect.objectContaining({ toStateName: 'paid' }))
   })
 
   it('runs the exit hook, then the enter hook, and no other hook', () => {

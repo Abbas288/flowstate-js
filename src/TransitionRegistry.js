@@ -20,15 +20,16 @@ export class TransitionRegistry {
   }
 
   /**
-   * The transition registered first wins when several of them match.
+   * Guards are ignored, so a transition is listed even if its guard would refuse it.
+   * The array keeps registration order.
    *
    * @param {string} fromStateName - Name of the state to leave.
    * @param {string} eventName - Name of the event being sent.
-   * @returns {Transition|undefined} - The match, or undefined if there is none.
+   * @returns {Transition[]} - The transitions the event triggers from that state.
    */
-  find (fromStateName, eventName) {
+  findAll (fromStateName, eventName) {
     return this.transitionsFrom(fromStateName)
-      .find((transition) => transition.isTriggeredBy(eventName))
+      .filter((transition) => transition.isTriggeredBy(eventName))
   }
 
   /**
