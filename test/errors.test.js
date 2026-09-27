@@ -16,11 +16,14 @@ const stateErrors = [
 
 const refusedEventErrors = [
   ['NoTransitionError', () => new NoTransitionError('placed', 'pay')],
-  ['BlockedTransitionError', () => {
-    const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
+  [
+    'BlockedTransitionError',
+    () => {
+      const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
 
-    return new BlockedTransitionError(payment)
-  }],
+      return new BlockedTransitionError(payment)
+    },
+  ],
 ]
 
 describe('FlowStateError', () => {
@@ -64,7 +67,9 @@ describe.each(stateErrors)('%s', (className, StateError) => {
   it('does not let the state name be written from outside', () => {
     const error = new StateError('paid')
 
-    expect(() => { error.stateName = 'shipped' }).toThrow(TypeError)
+    expect(() => {
+      error.stateName = 'shipped'
+    }).toThrow(TypeError)
     expect(error.stateName).toBe('paid')
   })
 })
@@ -88,8 +93,12 @@ describe.each(refusedEventErrors)('%s', (className, createError) => {
   it('does not let the state name or the event name be written from outside', () => {
     const error = createError()
 
-    expect(() => { error.fromStateName = 'paid' }).toThrow(TypeError)
-    expect(() => { error.eventName = 'ship' }).toThrow(TypeError)
+    expect(() => {
+      error.fromStateName = 'paid'
+    }).toThrow(TypeError)
+    expect(() => {
+      error.eventName = 'ship'
+    }).toThrow(TypeError)
     expect(error.fromStateName).toBe('placed')
     expect(error.eventName).toBe('pay')
   })
@@ -139,7 +148,9 @@ describe('BlockedTransitionError', () => {
     const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
     const error = new BlockedTransitionError(payment)
 
-    expect(() => { error.toStateName = 'shipped' }).toThrow(TypeError)
+    expect(() => {
+      error.toStateName = 'shipped'
+    }).toThrow(TypeError)
     expect(error.toStateName).toBe('paid')
   })
 

@@ -13,7 +13,7 @@ export class StateRegistry {
    *
    * @param {State} state - The state to store.
    */
-  register (state) {
+  register(state) {
     if (!(state instanceof State)) {
       throw new TypeError('Only State instances can be registered.')
     }
@@ -31,7 +31,7 @@ export class StateRegistry {
    * @param {string} name - The name to look for.
    * @returns {boolean} - True if a state with that name is registered.
    */
-  has (name) {
+  has(name) {
     return this.#statesByName.has(name)
   }
 
@@ -41,7 +41,7 @@ export class StateRegistry {
    * @param {string} name - The name to look for.
    * @returns {State|undefined} - The state under that name, or undefined if there is none.
    */
-  get (name) {
+  get(name) {
     return this.#statesByName.get(name)
   }
 
@@ -50,7 +50,7 @@ export class StateRegistry {
    *
    * @returns {string[]} - Names of every registered state, in registration order.
    */
-  get stateNames () {
+  get stateNames() {
     return [...this.#statesByName.keys()]
   }
 }

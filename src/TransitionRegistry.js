@@ -11,7 +11,7 @@ export class TransitionRegistry {
    *
    * @param {Transition} transition - The transition to store.
    */
-  register (transition) {
+  register(transition) {
     if (!(transition instanceof Transition)) {
       throw new TypeError('Only Transition instances can be registered.')
     }
@@ -27,9 +27,8 @@ export class TransitionRegistry {
    * @param {string} eventName - Name of the event being sent.
    * @returns {Transition[]} - The transitions the event triggers from that state.
    */
-  findAll (fromStateName, eventName) {
-    return this.transitionsFrom(fromStateName)
-      .filter((transition) => transition.isTriggeredBy(eventName))
+  findAll(fromStateName, eventName) {
+    return this.transitionsFrom(fromStateName).filter((transition) => transition.isTriggeredBy(eventName))
   }
 
   /**
@@ -39,9 +38,7 @@ export class TransitionRegistry {
    * @param {string} fromStateName - Name of the state to leave.
    * @returns {Transition[]} - The transitions leaving that state, in registration order.
    */
-  transitionsFrom (fromStateName) {
-    return this.#transitions.filter(
-      (transition) => transition.fromStateName === fromStateName
-    )
+  transitionsFrom(fromStateName) {
+    return this.#transitions.filter((transition) => transition.fromStateName === fromStateName)
   }
 }

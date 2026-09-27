@@ -19,7 +19,9 @@ describe('State', () => {
   it('runs its onEnter hook with the shared context', () => {
     const context = { visits: 0 }
     const state = new State('paid', {
-      onEnter: (ctx) => { ctx.visits += 1 },
+      onEnter: (ctx) => {
+        ctx.visits += 1
+      },
     })
 
     state.enter(context)
@@ -44,7 +46,9 @@ describe('State', () => {
   it('runs its onExit hook with the shared context', () => {
     const context = { departures: 0 }
     const state = new State('paid', {
-      onExit: (ctx) => { ctx.departures += 1 },
+      onExit: (ctx) => {
+        ctx.departures += 1
+      },
     })
 
     state.exit(context)
@@ -79,4 +83,3 @@ describe('State', () => {
     }
   })
 })
-

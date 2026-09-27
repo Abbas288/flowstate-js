@@ -50,7 +50,9 @@ describe('StateMachine', () => {
   it('does not let the current state be written from outside', () => {
     const order = new StateMachine('placed')
 
-    expect(() => { order.currentStateName = 'shipped' }).toThrow(TypeError)
+    expect(() => {
+      order.currentStateName = 'shipped'
+    }).toThrow(TypeError)
     expect(order.currentStateName).toBe('placed')
   })
 
@@ -90,7 +92,9 @@ describe('StateMachine', () => {
     const order = new StateMachine('placed')
     order.context.amount = 250
 
-    expect(() => { order.context = { amount: 0 } }).toThrow(TypeError)
+    expect(() => {
+      order.context = { amount: 0 }
+    }).toThrow(TypeError)
     expect(order.context.amount).toBe(250)
   })
 
@@ -125,9 +129,7 @@ describe('StateMachine', () => {
   it('hands back the machine so definitions can be chained', () => {
     const order = new StateMachine('placed')
 
-    order
-      .defineState('placed')
-      .defineState('paid')
+    order.defineState('placed').defineState('paid')
 
     expect(order.stateNames).toEqual(['placed', 'paid'])
   })
@@ -143,8 +145,7 @@ describe('StateMachine', () => {
   it('passes a bad hook straight on as a TypeError', () => {
     const order = new StateMachine('placed')
 
-    expect(() => order.defineState('paid', { onEnter: 'not-a-function' }))
-      .toThrow(TypeError)
+    expect(() => order.defineState('paid', { onEnter: 'not-a-function' })).toThrow(TypeError)
   })
 
   it('accepts a state without any hooks', () => {
@@ -166,8 +167,7 @@ describe('StateMachine', () => {
 
     order.defineState('paid', { onEnter: () => {} })
 
-    expect(() => order.defineState('paid', { onExit: () => {} }))
-      .toThrow(DuplicateStateError)
+    expect(() => order.defineState('paid', { onExit: () => {} })).toThrow(DuplicateStateError)
   })
 
   it('throws a FlowStateError, not a TypeError, for a duplicate state name', () => {
@@ -280,8 +280,7 @@ describe('StateMachine', () => {
     const order = machineWithStates('placed', 'paid')
 
     for (const invalidName of invalidNames) {
-      expect(() => order.defineTransition({ ...validMove, [field]: invalidName }))
-        .toThrow(TypeError)
+      expect(() => order.defineTransition({ ...validMove, [field]: invalidName })).toThrow(TypeError)
     }
   })
 
@@ -289,8 +288,7 @@ describe('StateMachine', () => {
     const order = machineWithStates('placed', 'paid')
 
     for (const invalidGuard of invalidFunctions) {
-      expect(() => order.defineTransition({ ...validMove, guard: invalidGuard }))
-        .toThrow(TypeError)
+      expect(() => order.defineTransition({ ...validMove, guard: invalidGuard })).toThrow(TypeError)
     }
   })
 
@@ -303,22 +301,19 @@ describe('StateMachine', () => {
   it('refuses a transition from a state that was never defined', () => {
     const order = machineWithStates('placed', 'paid')
 
-    expect(() => order.defineTransition({ from: 'packed', to: 'paid', on: 'pay' }))
-      .toThrow(UnknownStateError)
+    expect(() => order.defineTransition({ from: 'packed', to: 'paid', on: 'pay' })).toThrow(UnknownStateError)
   })
 
   it('refuses a transition to a state that was never defined', () => {
     const order = machineWithStates('placed', 'paid')
 
-    expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' }))
-      .toThrow(UnknownStateError)
+    expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' })).toThrow(UnknownStateError)
   })
 
   it('names the state that was never defined in the error', () => {
     const order = machineWithStates('placed', 'paid')
 
-    expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' }))
-      .toThrow(/shipped/)
+    expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' })).toThrow(/shipped/)
   })
 
   it('throws a FlowStateError, not a TypeError, for a state that was never defined', () => {
@@ -332,15 +327,13 @@ describe('StateMachine', () => {
   it('checks the field types before it checks that the states exist', () => {
     const order = machineWithStates('placed', 'paid')
 
-    expect(() => order.defineTransition({ from: 42, to: 'shipped', on: 'ship' }))
-      .toThrow(TypeError)
+    expect(() => order.defineTransition({ from: 42, to: 'shipped', on: 'ship' })).toThrow(TypeError)
   })
 
   it('does not register a transition it refuses', () => {
     const order = machineWithStates('placed', 'paid')
 
-    expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' }))
-      .toThrow(UnknownStateError)
+    expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' })).toThrow(UnknownStateError)
 
     expect(order.eventNamesFrom('placed')).toEqual([])
   })
@@ -540,7 +533,9 @@ describe('StateMachine', () => {
       from: 'placed',
       to: 'paid',
       on: 'pay',
-      guard: () => { throw new Error('guard failed') },
+      guard: () => {
+        throw new Error('guard failed')
+      },
     })
 
     expect(() => order.send('pay')).toThrow('guard failed')
@@ -592,8 +587,7 @@ describe('StateMachine', () => {
     order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
     order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => false })
 
-    expect(() => order.send('pay'))
-      .toThrow(expect.objectContaining({ toStateName: 'paid' }))
+    expect(() => order.send('pay')).toThrow(expect.objectContaining({ toStateName: 'paid' }))
   })
 
   it('runs the exit hook, then the enter hook, and no other hook', () => {
@@ -671,7 +665,11 @@ describe('StateMachine', () => {
 
   it('stays in the state it was in when the exit hook throws an error', () => {
     const order = new StateMachine('placed')
-    order.defineState('placed', { onExit: () => { throw new Error('exit failed') } })
+    order.defineState('placed', {
+      onExit: () => {
+        throw new Error('exit failed')
+      },
+    })
     order.defineState('paid')
     order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
@@ -682,7 +680,11 @@ describe('StateMachine', () => {
   it('has already moved when the enter hook throws an error', () => {
     const order = new StateMachine('placed')
     order.defineState('placed')
-    order.defineState('paid', { onEnter: () => { throw new Error('enter failed') } })
+    order.defineState('paid', {
+      onEnter: () => {
+        throw new Error('enter failed')
+      },
+    })
     order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
     expect(() => order.send('pay')).toThrow('enter failed')

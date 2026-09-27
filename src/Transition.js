@@ -17,7 +17,7 @@ export class Transition {
    * @param {string} move.on - Name of the triggering event.
    * @param {(context: object) => boolean} [move.guard] - Decides if the move is allowed.
    */
-  constructor ({ from, to, on, guard } = {}) {
+  constructor({ from, to, on, guard } = {}) {
     this.#requireName(from, 'from')
     this.#requireName(to, 'to')
     this.#requireName(on, 'on')
@@ -37,7 +37,7 @@ export class Transition {
    *
    * @returns {string} - Name of the state it leaves.
    */
-  get fromStateName () {
+  get fromStateName() {
     return this.#fromStateName
   }
 
@@ -46,7 +46,7 @@ export class Transition {
    *
    * @returns {string} - Name of the state it enters.
    */
-  get toStateName () {
+  get toStateName() {
     return this.#toStateName
   }
 
@@ -55,7 +55,7 @@ export class Transition {
    *
    * @returns {string} - Name of the event that triggers this transition.
    */
-  get eventName () {
+  get eventName() {
     return this.#eventName
   }
 
@@ -66,7 +66,7 @@ export class Transition {
    * @param {string} eventName - Name of the event to test.
    * @returns {boolean} - True if that event triggers this transition.
    */
-  isTriggeredBy (eventName) {
+  isTriggeredBy(eventName) {
     return this.#eventName === eventName
   }
 
@@ -77,7 +77,7 @@ export class Transition {
    * @param {object} context - The state machine's shared context.
    * @returns {boolean} - True if this transition may run right now.
    */
-  isAllowedIn (context) {
+  isAllowedIn(context) {
     if (this.#guard === undefined) {
       return true
     }
@@ -91,7 +91,7 @@ export class Transition {
    * @param {*} value - The value to check.
    * @param {string} label - Field name, used in the error message.
    */
-  #requireName (value, label) {
+  #requireName(value, label) {
     if (typeof value !== 'string' || value.trim() === '') {
       throw new TypeError(`Transition ${label} must be a non-empty string.`)
     }

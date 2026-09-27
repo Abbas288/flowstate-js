@@ -21,8 +21,7 @@ describe('Transition', () => {
 
   it.each(['from', 'to', 'on'])('rejects %s unless it is a non-empty string', (field) => {
     for (const invalidName of invalidNames) {
-      expect(() => new Transition({ ...validMove, [field]: invalidName }))
-        .toThrow(TypeError)
+      expect(() => new Transition({ ...validMove, [field]: invalidName })).toThrow(TypeError)
     }
   })
 
@@ -66,8 +65,7 @@ describe('Transition', () => {
     const invalidGuards = ['always', 42, {}, null, true, ['guard']]
 
     for (const invalidGuard of invalidGuards) {
-      expect(() => new Transition({ ...validMove, guard: invalidGuard }))
-        .toThrow(TypeError)
+      expect(() => new Transition({ ...validMove, guard: invalidGuard })).toThrow(TypeError)
     }
   })
 
@@ -136,7 +134,6 @@ describe('Transition', () => {
   })
 
   it('names the missing part in the error message', () => {
-    expect(() => new Transition({ from: 'placed', to: 'paid' }))
-      .toThrow('Transition on must be a non-empty string.')
+    expect(() => new Transition({ from: 'placed', to: 'paid' })).toThrow('Transition on must be a non-empty string.')
   })
 })

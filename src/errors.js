@@ -14,7 +14,7 @@ class FlowStateError extends Error {
    *
    * @param {string} message - What went wrong, in plain words.
    */
-  constructor (message) {
+  constructor(message) {
     super(message)
 
     // Logs the actual class name (e.g., UnknownStateError) instead of "Error".
@@ -37,7 +37,7 @@ class StateNameError extends FlowStateError {
    * @param {string} message - What went wrong, in plain words.
    * @param {string} stateName - The state name the error is about.
    */
-  constructor (message, stateName) {
+  constructor(message, stateName) {
     super(message)
 
     this.#stateName = stateName
@@ -49,7 +49,7 @@ class StateNameError extends FlowStateError {
    *
    * @returns {string} - The state name the error is about.
    */
-  get stateName () {
+  get stateName() {
     return this.#stateName
   }
 }
@@ -63,7 +63,7 @@ class UnknownStateError extends StateNameError {
    *
    * @param {string} stateName - The name that could not be found.
    */
-  constructor (stateName) {
+  constructor(stateName) {
     super(`No state named "${stateName}" has been defined.`, stateName)
   }
 }
@@ -78,7 +78,7 @@ class DuplicateStateError extends StateNameError {
    *
    * @param {string} stateName - The name that was already taken.
    */
-  constructor (stateName) {
+  constructor(stateName) {
     super(`A state named "${stateName}" is already defined.`, stateName)
   }
 }
@@ -100,7 +100,7 @@ class RefusedEventError extends FlowStateError {
    * @param {string} fromStateName - Name of the state the machine is in.
    * @param {string} eventName - Name of the event that was sent.
    */
-  constructor (message, fromStateName, eventName) {
+  constructor(message, fromStateName, eventName) {
     super(message)
 
     this.#fromStateName = fromStateName
@@ -112,7 +112,7 @@ class RefusedEventError extends FlowStateError {
    *
    * @returns {string} - Name of the state the machine was in.
    */
-  get fromStateName () {
+  get fromStateName() {
     return this.#fromStateName
   }
 
@@ -121,7 +121,7 @@ class RefusedEventError extends FlowStateError {
    *
    * @returns {string} - Name of the event that was sent.
    */
-  get eventName () {
+  get eventName() {
     return this.#eventName
   }
 }
@@ -138,12 +138,8 @@ class NoTransitionError extends RefusedEventError {
    * @param {string} fromStateName - Name of the state the machine is in.
    * @param {string} eventName - Name of the event that was sent.
    */
-  constructor (fromStateName, eventName) {
-    super(
-      `No transition from state "${fromStateName}" on event "${eventName}".`,
-      fromStateName,
-      eventName
-    )
+  constructor(fromStateName, eventName) {
+    super(`No transition from state "${fromStateName}" on event "${eventName}".`, fromStateName, eventName)
   }
 }
 
@@ -159,7 +155,7 @@ class BlockedTransitionError extends RefusedEventError {
    *
    * @param {Transition} transition - The transition whose guard refused it.
    */
-  constructor (transition) {
+  constructor(transition) {
     super(
       `The guard blocked the transition from state "${transition.fromStateName}" ` +
         `to state "${transition.toStateName}" on event "${transition.eventName}".`,
@@ -175,7 +171,7 @@ class BlockedTransitionError extends RefusedEventError {
    *
    * @returns {string} - Name of the state the transition would have entered.
    */
-  get toStateName () {
+  get toStateName() {
     return this.#toStateName
   }
 }
@@ -188,6 +184,7 @@ class BlockedTransitionError extends RefusedEventError {
  * between the errors that extend them, so no caller needs them, and keeping them
  * private leaves the hierarchy free to change without breaking anyone.
  */
+// prettier-ignore
 export {
   FlowStateError,
   UnknownStateError,

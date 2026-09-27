@@ -20,7 +20,7 @@ export class StateMachine {
    *
    * @param {string} initialStateName - Name of the state the machine starts in.
    */
-  constructor (initialStateName) {
+  constructor(initialStateName) {
     this.#requireName(initialStateName, 'Initial state name')
 
     this.#currentStateName = initialStateName
@@ -31,7 +31,7 @@ export class StateMachine {
    *
    * @returns {string} - Name of the state the machine is in.
    */
-  get currentStateName () {
+  get currentStateName() {
     return this.#currentStateName
   }
 
@@ -41,7 +41,7 @@ export class StateMachine {
    *
    * @returns {object} - The context every hook and guard is handed.
    */
-  get context () {
+  get context() {
     return this.#context
   }
 
@@ -51,7 +51,7 @@ export class StateMachine {
    *
    * @returns {string[]} - Names of every defined state, in definition order.
    */
-  get stateNames () {
+  get stateNames() {
     return this.#states.stateNames
   }
 
@@ -65,7 +65,7 @@ export class StateMachine {
    * @param {(context: object) => void} [options.onExit] - Runs on leaving this state.
    * @returns {StateMachine} - This machine, so that definitions can be chained.
    */
-  defineState (name, options) {
+  defineState(name, options) {
     this.#states.register(new State(name, options))
 
     return this
@@ -82,7 +82,7 @@ export class StateMachine {
    * @param {(context: object) => boolean} [move.guard] - Decides if the move is allowed.
    * @returns {StateMachine} - This machine, so that definitions can be chained.
    */
-  defineTransition (move) {
+  defineTransition(move) {
     const transition = new Transition(move)
 
     this.#requireDefinedState(transition.fromStateName)
@@ -104,7 +104,7 @@ export class StateMachine {
    *
    * @param {string} eventName - Name of the event to send.
    */
-  send (eventName) {
+  send(eventName) {
     this.#requireName(eventName, 'Event name')
     this.#requireDefinedState(this.#currentStateName)
 
@@ -135,10 +135,8 @@ export class StateMachine {
    * @param {string} fromStateName - Name of the state to look out from.
    * @returns {string[]} - Names of the events leaving that state, in definition order.
    */
-  eventNamesFrom (fromStateName) {
-    return this.#transitions
-      .transitionsFrom(fromStateName)
-      .map((transition) => transition.eventName)
+  eventNamesFrom(fromStateName) {
+    return this.#transitions.transitionsFrom(fromStateName).map((transition) => transition.eventName)
   }
 
   /**
@@ -147,7 +145,7 @@ export class StateMachine {
    * @param {*} value - The value to check.
    * @param {string} label - What the name is for, used to open the error message.
    */
-  #requireName (value, label) {
+  #requireName(value, label) {
     if (typeof value !== 'string' || value.trim() === '') {
       throw new TypeError(`${label} must be a non-empty string.`)
     }
@@ -158,7 +156,7 @@ export class StateMachine {
    *
    * @param {string} stateName - The name to look for.
    */
-  #requireDefinedState (stateName) {
+  #requireDefinedState(stateName) {
     if (!this.#states.has(stateName)) {
       throw new UnknownStateError(stateName)
     }
