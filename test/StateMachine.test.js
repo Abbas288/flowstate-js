@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { StateMachine } from '../src/StateMachine.js'
 import {
+  BlockedTransitionError,
   DuplicateStateError,
   FlowStateError,
   NoTransitionError,
@@ -440,13 +441,118 @@ describe('StateMachine', () => {
     expect(() => order.send('pay')).toThrow(UnknownStateError)
   })
 
-  it('currently moves even when the transition has a guard that refuses', () => {
+  it('moves when the guard allows the transition', () => {
     const order = machineWithStates('placed', 'paid')
-    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => true })
 
     order.send('pay')
 
     expect(order.currentStateName).toBe('paid')
+  })
+
+  it('refuses the event when the guard blocks the transition', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
+
+    expect(() => order.send('pay')).toThrow(BlockedTransitionError)
+  })
+
+  it('stays in the state it was in when the guard blocks the transition', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
+
+    expect(() => order.send('pay')).toThrow(BlockedTransitionError)
+    expect(order.currentStateName).toBe('placed')
+  })
+
+  it('runs no hook when the guard blocks the transition', () => {
+    const calls = []
+    const order = new StateMachine('placed')
+    order.defineState('placed', { onExit: () => calls.push('exit') })
+    order.defineState('paid', { onEnter: () => calls.push('enter') })
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
+
+    expect(() => order.send('pay')).toThrow(BlockedTransitionError)
+    expect(calls).toEqual([])
+  })
+
+  it('passes its own context object to the guard', () => {
+    const receivedContexts = []
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({
+      from: 'placed',
+      to: 'paid',
+      on: 'pay',
+      guard: (context) => {
+        receivedContexts.push(context)
+
+        return true
+      },
+    })
+
+    order.send('pay')
+
+    expect(receivedContexts).toHaveLength(1)
+    expect(receivedContexts[0]).toBe(order.context)
+  })
+
+  it('moves on a later send once the guard allows it', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({
+      from: 'placed',
+      to: 'paid',
+      on: 'pay',
+      guard: (context) => context.amount > 0,
+    })
+
+    order.context.amount = 0
+    expect(() => order.send('pay')).toThrow(BlockedTransitionError)
+
+    order.context.amount = 250
+    order.send('pay')
+    expect(order.currentStateName).toBe('paid')
+  })
+
+  it('asks the guard before it runs the exit hook', () => {
+    const calls = []
+    const order = new StateMachine('placed')
+    order.defineState('placed', { onExit: () => calls.push('exit') })
+    order.defineState('paid', { onEnter: () => calls.push('enter') })
+    order.defineTransition({
+      from: 'placed',
+      to: 'paid',
+      on: 'pay',
+      guard: () => {
+        calls.push('guard')
+
+        return true
+      },
+    })
+
+    order.send('pay')
+
+    expect(calls).toEqual(['guard', 'exit', 'enter'])
+  })
+
+  it('stays in the state it was in when the guard throws an error', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({
+      from: 'placed',
+      to: 'paid',
+      on: 'pay',
+      guard: () => { throw new Error('guard failed') },
+    })
+
+    expect(() => order.send('pay')).toThrow('guard failed')
+    expect(order.currentStateName).toBe('placed')
+  })
+
+  it('currently ignores a second transition on the same event', () => {
+    const order = machineWithStates('placed', 'paid', 'rejected')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
+    order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => true })
+
+    expect(() => order.send('pay')).toThrow(BlockedTransitionError)
   })
 
   it('runs the exit hook, then the enter hook, and no other hook', () => {

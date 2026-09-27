@@ -2,7 +2,7 @@ import { State } from './State.js'
 import { StateRegistry } from './StateRegistry.js'
 import { Transition } from './Transition.js'
 import { TransitionRegistry } from './TransitionRegistry.js'
-import { NoTransitionError, UnknownStateError } from './errors.js'
+import { BlockedTransitionError, NoTransitionError, UnknownStateError } from './errors.js'
 
 /**
  * A machine that is in exactly one state at a time, and that can be asked about the
@@ -97,9 +97,11 @@ export class StateMachine {
    * Moves the machine along the transition that the event triggers. Nothing is
    * returned, so that changing the machine stays separate from asking about it.
    *
-   * The state being left runs its exit hook, then the state being entered runs its
-   * enter hook, both with the shared context. An error from a hook reaches the
-   * caller as it is. No guard is consulted.
+   * The transition's guard is asked first, and nothing happens unless it allows the
+   * move. Then the state being left runs its exit hook and the state being entered
+   * runs its enter hook. Guard and hooks all get the shared context, and an error
+   * from any of them reaches the caller as it is. Only the first transition defined
+   * for the event is tried.
    *
    * @param {string} eventName - Name of the event to send.
    */
@@ -111,6 +113,10 @@ export class StateMachine {
 
     if (transition === undefined) {
       throw new NoTransitionError(this.#currentStateName, eventName)
+    }
+
+    if (!transition.isAllowedIn(this.#context)) {
+      throw new BlockedTransitionError(transition)
     }
 
     const fromState = this.#states.get(transition.fromStateName)
