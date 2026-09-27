@@ -108,24 +108,9 @@ export class StateMachine {
     this.#requireName(eventName, 'Event name')
     this.#requireDefinedState(this.#currentStateName)
 
-    const candidates = this.#transitions.findAll(this.#currentStateName, eventName)
+    const transition = this.#chooseTransition(eventName)
 
-    if (candidates.length === 0) {
-      throw new NoTransitionError(this.#currentStateName, eventName)
-    }
-
-    const transition = candidates.find((candidate) => candidate.isAllowedIn(this.#context))
-
-    if (transition === undefined) {
-      throw new BlockedTransitionError(candidates[0])
-    }
-
-    const fromState = this.#states.get(transition.fromStateName)
-    const toState = this.#states.get(transition.toStateName)
-
-    fromState.exit(this.#context)
-    this.#currentStateName = toState.name
-    toState.enter(this.#context)
+    this.#moveAlong(transition)
   }
 
   /**
@@ -162,5 +147,45 @@ export class StateMachine {
     if (!this.#states.has(stateName)) {
       throw new UnknownStateError(stateName)
     }
+  }
+
+  /**
+   * Throws NoTransitionError when no transition leaves the current state on the event.
+   * Throws BlockedTransitionError when such transitions exist but the guard of each one
+   * refuses the move.
+   *
+   * @param {string} eventName - Name of the event that was sent.
+   * @returns {Transition} - The first transition whose guard allows the move.
+   */
+  #chooseTransition(eventName) {
+    const candidates = this.#transitions.findAll(this.#currentStateName, eventName)
+
+    if (candidates.length === 0) {
+      throw new NoTransitionError(this.#currentStateName, eventName)
+    }
+
+    const transition = candidates.find((candidate) => candidate.isAllowedIn(this.#context))
+
+    if (transition === undefined) {
+      throw new BlockedTransitionError(candidates[0])
+    }
+
+    return transition
+  }
+
+  /**
+   * Runs the exit hook, then changes the current state, then runs the enter hook.
+   * If the exit hook throws an error, the current state has not changed yet. If the
+   * enter hook throws an error, the current state has already changed.
+   *
+   * @param {Transition} transition - The transition to take.
+   */
+  #moveAlong(transition) {
+    const fromState = this.#states.get(transition.fromStateName)
+    const toState = this.#states.get(transition.toStateName)
+
+    fromState.exit(this.#context)
+    this.#currentStateName = toState.name
+    toState.enter(this.#context)
   }
 }
