@@ -279,7 +279,7 @@ describe('StateMachine', () => {
     expect(order.eventNamesFrom('placed')).toEqual(['pay'])
   })
 
-  it('lists a guarded event even though the guard refuses', () => {
+  it('lists a guarded event even though the guard refuses the move', () => {
     const order = machineWithStates('placed', 'paid')
 
     order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
@@ -447,10 +447,13 @@ describe('StateMachine', () => {
     }
   })
 
-  it('refuses to move out of a starting state that was never defined', () => {
-    const order = new StateMachine('never-defined')
+  it('throws an UnknownStateError instead of a NoTransitionError when the starting state was never defined', () => {
+    const order = new StateMachine('draft')
+    order.defineState('placed').defineState('paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
     expect(() => order.send('pay')).toThrow(UnknownStateError)
+    expect(() => order.send('pay')).toThrow(expect.objectContaining({ stateName: 'draft' }))
   })
 
   it('moves when the guard allows the transition', () => {
@@ -601,12 +604,164 @@ describe('StateMachine', () => {
     expect(laterGuardWasAsked).toBe(false)
   })
 
-  it('reports the first transition when every guard on the event blocks', () => {
+  it('reports the first transition when every guard on the event blocks its transition', () => {
     const order = machineWithStates('placed', 'paid', 'rejected')
     order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
     order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => false })
 
     expect(() => order.send('pay')).toThrow(expect.objectContaining({ toStateName: 'paid' }))
+  })
+
+  it('asks each guard once when every guard on the event blocks its transition', () => {
+    const askedGuards = []
+    const order = machineWithStates('placed', 'paid', 'rejected')
+    order.defineTransition({
+      from: 'placed',
+      to: 'paid',
+      on: 'pay',
+      guard: () => {
+        askedGuards.push('paid')
+
+        return false
+      },
+    })
+    order.defineTransition({
+      from: 'placed',
+      to: 'rejected',
+      on: 'pay',
+      guard: () => {
+        askedGuards.push('rejected')
+
+        return false
+      },
+    })
+
+    expect(() => order.send('pay')).toThrow(BlockedTransitionError)
+    expect(askedGuards).toEqual(['paid', 'rejected'])
+  })
+
+  it('answers true for an event that would move the machine', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    expect(order.canSend('pay')).toBe(true)
+  })
+
+  it('answers false for an event that has no transition from the current state', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    expect(order.canSend('ship')).toBe(false)
+  })
+
+  it('answers false when the guard blocks the transition', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
+
+    expect(order.canSend('pay')).toBe(false)
+  })
+
+  it('answers true when a later transition on the event is allowed', () => {
+    const order = machineWithStates('placed', 'paid', 'rejected')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
+    order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => true })
+
+    expect(order.canSend('pay')).toBe(true)
+  })
+
+  it('changes its answer when the context changes', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({
+      from: 'placed',
+      to: 'paid',
+      on: 'pay',
+      guard: (context) => context.amount > 0,
+    })
+
+    order.context.amount = 0
+    expect(order.canSend('pay')).toBe(false)
+
+    order.context.amount = 250
+    expect(order.canSend('pay')).toBe(true)
+  })
+
+  it('does not move the machine when it answers true', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    expect(order.canSend('pay')).toBe(true)
+    expect(order.currentStateName).toBe('placed')
+  })
+
+  it('runs no hook while answering', () => {
+    const calls = []
+    const order = new StateMachine('placed')
+    order.defineState('placed', { onExit: () => calls.push('exit') })
+    order.defineState('paid', { onEnter: () => calls.push('enter') })
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    order.canSend('pay')
+
+    expect(calls).toEqual([])
+  })
+
+  it('passes its own context object to the guard while answering', () => {
+    const receivedContexts = []
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({
+      from: 'placed',
+      to: 'paid',
+      on: 'pay',
+      guard: (ctx) => {
+        receivedContexts.push(ctx)
+
+        return true
+      },
+    })
+
+    order.canSend('pay')
+
+    expect(receivedContexts).toHaveLength(1)
+    expect(receivedContexts[0]).toBe(order.context)
+  })
+
+  it('answers without asking a later guard once an earlier one allows the move', () => {
+    let laterGuardWasAsked = false
+    const order = machineWithStates('placed', 'paid', 'rejected')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => true })
+    order.defineTransition({
+      from: 'placed',
+      to: 'rejected',
+      on: 'pay',
+      guard: () => {
+        laterGuardWasAsked = true
+
+        return true
+      },
+    })
+
+    order.canSend('pay')
+
+    expect(laterGuardWasAsked).toBe(false)
+  })
+
+  it('throws a TypeError instead of answering when the event name is not a non-empty string', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    for (const invalidName of invalidNames) {
+      expect(() => order.canSend(invalidName)).toThrow(TypeError)
+    }
+  })
+
+  it('throws an UnknownStateError instead of returning false when the starting state was never defined', () => {
+    const order = new StateMachine('draft')
+    order.defineState('placed').defineState('paid')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    // draft is not defined, so the machine cannot know whether it could move on 'pay' or not
+    expect(() => order.canSend('pay')).toThrow(UnknownStateError)
+    expect(() => order.canSend('pay')).toThrow(expect.objectContaining({ stateName: 'draft' }))
   })
 
   it('runs the exit hook, then the enter hook, and no other hook', () => {

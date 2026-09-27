@@ -15,8 +15,8 @@ export class StateMachine {
   #transitions = new TransitionRegistry()
 
   /**
-   * The starting state need not be defined yet, so a state can be
-   * defined after the machine that starts in it.
+   * The starting state need not be defined yet. It can be defined after the machine
+   * has been created.
    *
    * @param {string} initialStateName - Name of the state the machine starts in.
    */
@@ -94,23 +94,31 @@ export class StateMachine {
   }
 
   /**
-   * Moves the machine along the transition that the event triggers. Nothing is
-   * returned, so that changing the machine stays separate from asking about it.
-   *
-   * Of the transitions the event triggers, the first one whose guard allows the move
-   * is taken, and nothing happens if none does. Then the state being left runs its
-   * exit hook and the state being entered runs its enter hook. Guards and hooks all
-   * get the shared context, and an error from any of them reaches the caller as it is.
+   * Moves the machine along the first transition on the event whose guard allows it.
+   * Runs the exit hook, then changes the current state, then runs the enter hook.
+   * Throws NoTransitionError or BlockedTransitionError if the machine cannot move.
    *
    * @param {string} eventName - Name of the event to send.
    */
   send(eventName) {
-    this.#requireName(eventName, 'Event name')
-    this.#requireDefinedState(this.#currentStateName)
+    this.#requireReadyToSend(eventName)
 
     const transition = this.#chooseTransition(eventName)
 
     this.#moveAlong(transition)
+  }
+
+  /**
+   * Tells whether send would move the machine now, without moving it. Guards are asked
+   * but no hook runs. Throws the same TypeError and UnknownStateError as send.
+   *
+   * @param {string} eventName - Name of the event to ask about.
+   * @returns {boolean} - True if send would move the machine now, false if send would refuse the event.
+   */
+  canSend(eventName) {
+    this.#requireReadyToSend(eventName)
+
+    return this.#findAllowedTransition(eventName) !== undefined
   }
 
   /**
@@ -150,6 +158,16 @@ export class StateMachine {
   }
 
   /**
+   * Throws unless the event name is a non-empty string and the current state is defined.
+   *
+   * @param {*} eventName - The value to check.
+   */
+  #requireReadyToSend(eventName) {
+    this.#requireName(eventName, 'Event name')
+    this.#requireDefinedState(this.#currentStateName)
+  }
+
+  /**
    * Throws NoTransitionError when no transition leaves the current state on the event.
    * Throws BlockedTransitionError when such transitions exist but the guard of each one
    * refuses the move.
@@ -158,19 +176,31 @@ export class StateMachine {
    * @returns {Transition} - The first transition whose guard allows the move.
    */
   #chooseTransition(eventName) {
+    const transition = this.#findAllowedTransition(eventName)
+
+    if (transition !== undefined) {
+      return transition
+    }
+
     const candidates = this.#transitions.findAll(this.#currentStateName, eventName)
 
     if (candidates.length === 0) {
       throw new NoTransitionError(this.#currentStateName, eventName)
     }
 
-    const transition = candidates.find((candidate) => candidate.isAllowedIn(this.#context))
+    throw new BlockedTransitionError(candidates[0])
+  }
 
-    if (transition === undefined) {
-      throw new BlockedTransitionError(candidates[0])
-    }
-
-    return transition
+  /**
+   * Asks the guards in definition order and stops at the first that allows the move.
+   *
+   * @param {string} eventName - Name of the event to look up.
+   * @returns {Transition|undefined} - The transition send would take, or undefined if there is none.
+   */
+  #findAllowedTransition(eventName) {
+    return this.#transitions
+      .findAll(this.#currentStateName, eventName)
+      .find((candidate) => candidate.isAllowedIn(this.#context))
   }
 
   /**
