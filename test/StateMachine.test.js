@@ -30,6 +30,16 @@ const machineWithStates = (initialStateName, ...otherStateNames) => {
   return order
 }
 
+/**
+ * Reads each history entry back in the shape defineTransition takes, so that toEqual
+ * can compare the entries by their names.
+ *
+ * @param {StateMachine} machine - The machine whose history to read.
+ * @returns {object[]} - One { from, to, on } object per entry, oldest first.
+ */
+const recordedMoves = (machine) =>
+  machine.history.map((entry) => ({ from: entry.fromStateName, to: entry.toStateName, on: entry.eventName }))
+
 describe('StateMachine', () => {
   it('starts in the state it was given', () => {
     const order = new StateMachine('placed')
@@ -872,5 +882,98 @@ describe('StateMachine', () => {
     order.eventNamesFrom('placed').push('forge')
 
     expect(order.eventNamesFrom('placed')).toEqual(['pay'])
+  })
+
+  it('has an empty history before any event is sent', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition(validMove)
+
+    expect(order.history).toEqual([])
+  })
+
+  it('records each move in the history, oldest first', () => {
+    const order = machineWithStates('placed', 'paid', 'shipped')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+    order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
+
+    order.send('pay')
+    order.send('ship')
+
+    expect(recordedMoves(order)).toEqual([
+      { from: 'placed', to: 'paid', on: 'pay' },
+      { from: 'paid', to: 'shipped', on: 'ship' },
+    ])
+  })
+
+  it('records the transition whose guard allowed the move', () => {
+    const order = machineWithStates('placed', 'paid', 'rejected')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
+    order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => true })
+
+    order.send('pay')
+
+    expect(recordedMoves(order)).toEqual([{ from: 'placed', to: 'rejected', on: 'pay' }])
+  })
+
+  it('records no move when send throws a NoTransitionError', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition(validMove)
+
+    expect(() => order.send('ship')).toThrow(NoTransitionError)
+    expect(order.history).toEqual([])
+  })
+
+  it('records no move when send throws a BlockedTransitionError', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({ ...validMove, guard: () => false })
+
+    expect(() => order.send('pay')).toThrow(BlockedTransitionError)
+    expect(order.history).toEqual([])
+  })
+
+  it('records no move when the exit hook throws an error', () => {
+    const order = new StateMachine('placed')
+    order.defineState('placed', {
+      onExit: () => {
+        throw new Error('exit failed')
+      },
+    })
+    order.defineState('paid')
+    order.defineTransition(validMove)
+
+    expect(() => order.send('pay')).toThrow('exit failed')
+    expect(order.history).toEqual([])
+  })
+
+  it('records the move when the enter hook throws an error', () => {
+    const order = new StateMachine('placed')
+    order.defineState('placed')
+    order.defineState('paid', {
+      onEnter: () => {
+        throw new Error('enter failed')
+      },
+    })
+    order.defineTransition(validMove)
+
+    expect(() => order.send('pay')).toThrow('enter failed')
+    expect(recordedMoves(order)).toEqual([validMove])
+  })
+
+  it('records no move when canSend answers true', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition(validMove)
+
+    expect(order.canSend('pay')).toBe(true)
+    expect(order.history).toEqual([])
+  })
+
+  it('cannot be changed through the history it returns', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition(validMove)
+    order.send('pay')
+
+    order.history.push(order.history[0])
+
+    expect(recordedMoves(order)).toEqual([validMove])
   })
 })

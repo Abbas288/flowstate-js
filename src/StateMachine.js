@@ -1,6 +1,8 @@
+import { HistoryEntry } from './HistoryEntry.js'
 import { State } from './State.js'
 import { StateRegistry } from './StateRegistry.js'
 import { Transition } from './Transition.js'
+import { TransitionHistory } from './TransitionHistory.js'
 import { TransitionRegistry } from './TransitionRegistry.js'
 import { BlockedTransitionError, NoTransitionError, UnknownStateError } from './errors.js'
 
@@ -13,6 +15,7 @@ export class StateMachine {
   #context = {}
   #states = new StateRegistry()
   #transitions = new TransitionRegistry()
+  #history = new TransitionHistory()
 
   /**
    * The starting state need not be defined yet. It can be defined after the machine
@@ -56,6 +59,15 @@ export class StateMachine {
   }
 
   /**
+   * Builds a new array on every access, so the caller cannot change the history.
+   *
+   * @returns {HistoryEntry[]} - Every move the machine has made, oldest first.
+   */
+  get history() {
+    return this.#history.entries
+  }
+
+  /**
    * The name and the hooks are checked here, so a bad definition fails at
    * once instead of on the first move. A name can be defined only once.
    *
@@ -95,7 +107,7 @@ export class StateMachine {
 
   /**
    * Moves the machine along the first transition on the event whose guard allows it.
-   * Runs the exit hook, then changes the current state, then runs the enter hook.
+   * Runs the exit hook, then changes the current state and records the move, then runs the enter hook.
    * Throws NoTransitionError or BlockedTransitionError if the machine cannot move.
    *
    * @param {string} eventName - Name of the event to send.
@@ -204,9 +216,9 @@ export class StateMachine {
   }
 
   /**
-   * Runs the exit hook, then changes the current state, then runs the enter hook.
-   * If the exit hook throws an error, the current state has not changed yet. If the
-   * enter hook throws an error, the current state has already changed.
+   * Runs the exit hook, then changes the current state and records the move, then runs the enter hook.
+   * If the exit hook throws an error, the current state has not changed yet and no move is recorded.
+   * If the enter hook throws an error, the current state has already changed and the move is recorded.
    *
    * @param {Transition} transition - The transition to take.
    */
@@ -216,6 +228,7 @@ export class StateMachine {
 
     fromState.exit(this.#context)
     this.#currentStateName = toState.name
+    this.#history.record(new HistoryEntry(transition))
     toState.enter(this.#context)
   }
 }
