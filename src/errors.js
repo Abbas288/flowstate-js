@@ -1,3 +1,5 @@
+import { Transition } from './Transition.js'
+
 /**
  * Base class for every error thrown when a rule of your machine is broken.
  * Catching this one catches them all, including kinds added later.
@@ -82,22 +84,24 @@ export class DuplicateStateError extends StateNameError {
 }
 
 /**
- * Thrown when no transition leaves the current state on the event that was sent.
- * Both names are carried, because either one may be perfectly good on its own and
- * only the pair is at fault.
+ * Shared by the errors that say why a sent event was refused. It is not exported,
+ * so catch FlowStateError for all of them, or one of the concrete kinds below for
+ * a single case.
  */
-export class NoTransitionError extends FlowStateError {
+class RefusedEventError extends FlowStateError {
   #fromStateName
   #eventName
 
   /**
-   * The message names both, so a log line on its own points at the missing edge.
+   * The names are given twice, once inside the message for a human reader and once
+   * on their own so that code can read them.
    *
+   * @param {string} message - What went wrong, in plain words.
    * @param {string} fromStateName - Name of the state the machine is in.
    * @param {string} eventName - Name of the event that was sent.
    */
-  constructor (fromStateName, eventName) {
-    super(`No transition from state "${fromStateName}" on event "${eventName}".`)
+  constructor (message, fromStateName, eventName) {
+    super(message)
 
     this.#fromStateName = fromStateName
     this.#eventName = eventName
@@ -119,5 +123,59 @@ export class NoTransitionError extends FlowStateError {
    */
   get eventName () {
     return this.#eventName
+  }
+}
+
+/**
+ * Thrown when no transition leaves the current state on the event that was sent.
+ * Both names are carried, because either one may be perfectly good on its own and
+ * only the pair is at fault.
+ */
+export class NoTransitionError extends RefusedEventError {
+  /**
+   * The message names both, so a log line on its own points at the missing edge.
+   *
+   * @param {string} fromStateName - Name of the state the machine is in.
+   * @param {string} eventName - Name of the event that was sent.
+   */
+  constructor (fromStateName, eventName) {
+    super(
+      `No transition from state "${fromStateName}" on event "${eventName}".`,
+      fromStateName,
+      eventName
+    )
+  }
+}
+
+/**
+ * Thrown when a transition exists for the event but its guard refuses it. Unlike a
+ * missing transition, the same event may succeed later, once the context changes.
+ */
+export class BlockedTransitionError extends RefusedEventError {
+  #toStateName
+
+  /**
+   * Takes the whole transition, so that its two state names cannot be swapped.
+   *
+   * @param {Transition} transition - The transition whose guard refused it.
+   */
+  constructor (transition) {
+    super(
+      `The guard blocked the transition from state "${transition.fromStateName}" ` +
+        `to state "${transition.toStateName}" on event "${transition.eventName}".`,
+      transition.fromStateName,
+      transition.eventName
+    )
+
+    this.#toStateName = transition.toStateName
+  }
+
+  /**
+   * The machine would have moved here if the guard had allowed it.
+   *
+   * @returns {string} - Name of the state the transition would have entered.
+   */
+  get toStateName () {
+    return this.#toStateName
   }
 }

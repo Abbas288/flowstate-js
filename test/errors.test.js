@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { Transition } from '../src/Transition.js'
 import {
+  BlockedTransitionError,
   DuplicateStateError,
   FlowStateError,
   NoTransitionError,
@@ -9,6 +11,15 @@ import {
 const stateErrors = [
   ['UnknownStateError', UnknownStateError],
   ['DuplicateStateError', DuplicateStateError],
+]
+
+const refusedEventErrors = [
+  ['NoTransitionError', () => new NoTransitionError('placed', 'pay')],
+  ['BlockedTransitionError', () => {
+    const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    return new BlockedTransitionError(payment)
+  }],
 ]
 
 describe('FlowStateError', () => {
@@ -57,15 +68,44 @@ describe.each(stateErrors)('%s', (className, StateError) => {
   })
 })
 
-describe('NoTransitionError', () => {
+describe.each(refusedEventErrors)('%s', (className, createError) => {
   it('can be caught as a FlowStateError', () => {
-    expect(new NoTransitionError('placed', 'ship')).toBeInstanceOf(FlowStateError)
+    expect(createError()).toBeInstanceOf(FlowStateError)
   })
 
   it('is named after its own class, not after the base class', () => {
-    expect(new NoTransitionError('placed', 'ship').name).toBe('NoTransitionError')
+    expect(createError().name).toBe(className)
   })
 
+  it('hands out the state name and the event name without parsing the message', () => {
+    const error = createError()
+
+    expect(error.fromStateName).toBe('placed')
+    expect(error.eventName).toBe('pay')
+  })
+
+  it('does not let the state name or the event name be written from outside', () => {
+    const error = createError()
+
+    expect(() => { error.fromStateName = 'paid' }).toThrow(TypeError)
+    expect(() => { error.eventName = 'ship' }).toThrow(TypeError)
+    expect(error.fromStateName).toBe('placed')
+    expect(error.eventName).toBe('pay')
+  })
+
+  it('is not one of the errors about a single state name', () => {
+    const error = createError()
+
+    expect(error).not.toBeInstanceOf(UnknownStateError)
+    expect(error).not.toBeInstanceOf(DuplicateStateError)
+  })
+
+  it('has no stateName, since it carries more than one name', () => {
+    expect(createError().stateName).toBeUndefined()
+  })
+})
+
+describe('NoTransitionError', () => {
   it('names both the state and the event in its message', () => {
     const error = new NoTransitionError('placed', 'ship')
 
@@ -73,40 +113,52 @@ describe('NoTransitionError', () => {
     expect(error.message).toContain('ship')
   })
 
-  it('hands out both names without parsing the message', () => {
-    const error = new NoTransitionError('placed', 'ship')
+  it('has no toStateName, since there is no transition to take one from', () => {
+    expect(new NoTransitionError('placed', 'ship').toStateName).toBeUndefined()
+  })
+})
+
+describe('BlockedTransitionError', () => {
+  it('puts all three names of the transition in its message', () => {
+    const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
+    const error = new BlockedTransitionError(payment)
+
+    expect(error.message).toContain('placed')
+    expect(error.message).toContain('paid')
+    expect(error.message).toContain('pay')
+  })
+
+  it('hands out the name of the state the transition would have entered', () => {
+    const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    expect(new BlockedTransitionError(payment).toStateName).toBe('paid')
+  })
+
+  it('does not let toStateName be written from outside', () => {
+    const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
+    const error = new BlockedTransitionError(payment)
+
+    expect(() => { error.toStateName = 'shipped' }).toThrow(TypeError)
+    expect(error.toStateName).toBe('paid')
+  })
+
+  it('does not swap the two state names', () => {
+    const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
+    const error = new BlockedTransitionError(payment)
 
     expect(error.fromStateName).toBe('placed')
-    expect(error.eventName).toBe('ship')
-  })
-
-  it('does not let either name be written from outside', () => {
-    const error = new NoTransitionError('placed', 'ship')
-
-    expect(() => { error.fromStateName = 'paid' }).toThrow(TypeError)
-    expect(() => { error.eventName = 'pay' }).toThrow(TypeError)
-    expect(error.fromStateName).toBe('placed')
-    expect(error.eventName).toBe('ship')
-  })
-
-  it('is not one of the errors about a single state name', () => {
-    const error = new NoTransitionError('placed', 'ship')
-
-    expect(error).not.toBeInstanceOf(UnknownStateError)
-    expect(error).not.toBeInstanceOf(DuplicateStateError)
-  })
-
-  it('has no stateName, since it carries two names', () => {
-    expect(new NoTransitionError('placed', 'ship').stateName).toBeUndefined()
+    expect(error.toStateName).toBe('paid')
   })
 })
 
 describe('the error family', () => {
   it('lets one catch handle every error the module throws', () => {
+    const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
     const thrown = [
       new UnknownStateError('paid'),
       new DuplicateStateError('paid'),
       new NoTransitionError('placed', 'ship'),
+      new BlockedTransitionError(payment),
     ]
 
     for (const error of thrown) {
@@ -114,9 +166,16 @@ describe('the error family', () => {
     }
   })
 
-  it('keeps the two kinds apart', () => {
+  it('tells an unknown state apart from a duplicate one', () => {
     expect(new UnknownStateError('paid')).not.toBeInstanceOf(DuplicateStateError)
     expect(new DuplicateStateError('paid')).not.toBeInstanceOf(UnknownStateError)
+  })
+
+  it('tells a missing transition apart from a blocked one', () => {
+    const payment = new Transition({ from: 'placed', to: 'paid', on: 'pay' })
+
+    expect(new NoTransitionError('placed', 'pay')).not.toBeInstanceOf(BlockedTransitionError)
+    expect(new BlockedTransitionError(payment)).not.toBeInstanceOf(NoTransitionError)
   })
 
   it('says different things about the same state name', () => {
