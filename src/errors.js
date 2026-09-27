@@ -4,9 +4,9 @@ import { Transition } from './Transition.js'
  * Base class for every error thrown when a rule of your machine is broken.
  * Catching this one catches them all, including kinds added later.
  *
- * A wrong argument type is not one of these. A non-string name or a
- * non-function guard throws the built-in TypeError, because the mistake is
- * in the calling code rather than in the machine.
+ * A wrong argument type is not one of these. If a name is not a string or a guard
+ * is not a function, the built-in TypeError is thrown instead, because the mistake
+ * is in the calling code rather than in the machine.
  */
 class FlowStateError extends Error {
   /**
