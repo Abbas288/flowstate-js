@@ -68,4 +68,30 @@ describe('TransitionHistory', () => {
     expect(() => history.record(new Transition(shipMove))).toThrow(TypeError)
     expectSameItems(history.entries, [paying])
   })
+
+  it('removes the newest entry', () => {
+    const history = new TransitionHistory()
+    const paying = new HistoryEntry(new Transition(payMove))
+    history.record(paying)
+    history.record(new HistoryEntry(new Transition(shipMove)))
+
+    history.removeNewestEntry()
+
+    expectSameItems(history.entries, [paying])
+  })
+
+  it('returns the entry it removes', () => {
+    const history = new TransitionHistory()
+    history.record(new HistoryEntry(new Transition(payMove)))
+    const shipping = new HistoryEntry(new Transition(shipMove))
+    history.record(shipping)
+
+    expect(history.removeNewestEntry()).toBe(shipping)
+  })
+
+  it('returns undefined when there is no entry to remove', () => {
+    const history = new TransitionHistory()
+
+    expect(history.removeNewestEntry()).toBeUndefined()
+  })
 })

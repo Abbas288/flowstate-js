@@ -27,4 +27,13 @@ export class TransitionHistory {
   get entries() {
     return [...this.#entries]
   }
+
+  /**
+   * Removes the newest entry from the history and returns it.
+   *
+   * @returns {HistoryEntry|undefined} - The entry that was removed, or undefined if the history was empty.
+   */
+  removeNewestEntry() {
+    return this.#entries.pop()
+  }
 }
