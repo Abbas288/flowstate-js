@@ -133,10 +133,12 @@ export class StateMachine {
    * at the moment it is sent.
    *
    * @param {string} fromStateName - Name of the state to look out from.
-   * @returns {string[]} - Names of the events leaving that state, in definition order.
+   * @returns {string[]} - Names of the events leaving that state, each once, in the order first defined.
    */
   eventNamesFrom(fromStateName) {
-    return this.#transitions.transitionsFrom(fromStateName).map((transition) => transition.eventName)
+    const eventNames = this.#transitions.transitionsFrom(fromStateName).map((transition) => transition.eventName)
+
+    return [...new Set(eventNames)]
   }
 
   /**

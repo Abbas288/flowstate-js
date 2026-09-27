@@ -220,6 +220,25 @@ describe('StateMachine', () => {
     expect(order.eventNamesFrom('placed')).toEqual(['pay', 'cancel'])
   })
 
+  it('lists an event once even when several transitions share it', () => {
+    const order = machineWithStates('placed', 'paid', 'rejected')
+
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+    order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay' })
+
+    expect(order.eventNamesFrom('placed')).toEqual(['pay'])
+  })
+
+  it('keeps a shared event where it was first defined', () => {
+    const order = machineWithStates('placed', 'paid', 'void', 'rejected')
+
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+    order.defineTransition({ from: 'placed', to: 'void', on: 'cancel' })
+    order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay' })
+
+    expect(order.eventNamesFrom('placed')).toEqual(['pay', 'cancel'])
+  })
+
   it('lists only events that leave the state it was asked about', () => {
     const order = machineWithStates('placed', 'paid', 'shipped')
 
