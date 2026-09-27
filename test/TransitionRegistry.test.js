@@ -108,7 +108,7 @@ describe('TransitionRegistry', () => {
     registry.register(pay)
     registry.register(cancel)
 
-    expect(registry.transitionsFrom('placed')).toEqual([pay, cancel])
+    expectSameTransitions(registry.transitionsFrom('placed'), [pay, cancel])
   })
 
   it('lists no way out of a state that has none', () => {
@@ -131,7 +131,7 @@ describe('TransitionRegistry', () => {
     registry.register(pay)
     registry.register(new Transition(shipMove))
 
-    expect(registry.transitionsFrom('placed')).toEqual([pay])
+    expectSameTransitions(registry.transitionsFrom('placed'), [pay])
   })
 
   it('lists a transition even when its guard says no', () => {
@@ -140,7 +140,7 @@ describe('TransitionRegistry', () => {
 
     registry.register(guardedPay)
 
-    expect(registry.transitionsFrom('placed')).toEqual([guardedPay])
+    expectSameTransitions(registry.transitionsFrom('placed'), [guardedPay])
   })
 
   it('lists a transition that returns to the same state', () => {
@@ -149,7 +149,7 @@ describe('TransitionRegistry', () => {
 
     registry.register(confirm)
 
-    expect(registry.transitionsFrom('paid')).toEqual([confirm])
+    expectSameTransitions(registry.transitionsFrom('paid'), [confirm])
   })
 
   it('cannot be changed through the list it returns', () => {
