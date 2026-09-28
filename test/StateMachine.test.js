@@ -976,4 +976,153 @@ describe('StateMachine', () => {
 
     expect(recordedMoves(order)).toEqual([validMove])
   })
+
+  it('moves back to the state it left on its last move', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition(validMove)
+    
+    order.send('pay')
+    expect(order.currentStateName).toBe('paid')
+
+    order.undoLastMove()
+    expect(order.currentStateName).toBe('placed')
+  })
+
+  it('removes the undone move from the history', () => {
+    const order = machineWithStates('placed', 'paid', 'shipped')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+    order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
+    order.send('pay')
+    order.send('ship')
+
+    order.undoLastMove()
+
+    expect(order.currentStateName).toBe('paid')
+    expect(recordedMoves(order)).toEqual([{ from: 'placed', to: 'paid', on: 'pay' }])
+  })
+
+  it('undoes one move per call until it is back in its starting state', () => {
+    const order = machineWithStates('placed', 'paid', 'shipped')
+    order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+    order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
+    order.send('pay')
+    order.send('ship')
+    expect(order.currentStateName).toBe('shipped')
+
+    order.undoLastMove()
+    expect(order.currentStateName).toBe('paid')
+
+    order.undoLastMove()
+    expect(order.currentStateName).toBe('placed')
+    expect(order.history).toEqual([])
+  })
+
+  it('does nothing when there is no move to undo', () => {
+    const calls = []
+    const order = new StateMachine('placed')
+    order.defineState('placed', {
+      onEnter: () => calls.push('enter placed'),
+      onExit: () => calls.push('exit placed'),
+    })
+
+    order.undoLastMove()
+
+    expect(order.currentStateName).toBe('placed')
+    expect(calls).toEqual([])
+  })
+
+  it('returns nothing, whether or not there was a move to undo', () => {
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition(validMove)
+    order.send('pay')
+
+    expect(order.undoLastMove()).toBeUndefined()
+    expect(order.undoLastMove()).toBeUndefined()
+  })
+
+  it('moves back without asking the guard', () => {
+    const askedGuards = []
+    const order = machineWithStates('placed', 'paid')
+    order.defineTransition({
+      ...validMove,
+      guard: () => {
+        askedGuards.push('paid')
+
+        return true
+      },
+    })
+    order.send('pay')
+
+    order.undoLastMove()
+
+    expect(order.currentStateName).toBe('placed')
+    expect(askedGuards).toEqual(['paid'])
+  })
+
+  it('runs the exit hook of the state it leaves, then the enter hook of the state it moves back to', () => {
+    const calls = []
+    const order = new StateMachine('placed')
+    order.defineState('placed', {
+      onEnter: () => calls.push('enter placed'),
+      onExit: () => calls.push('exit placed'),
+    })
+    order.defineState('paid', {
+      onEnter: () => calls.push('enter paid'),
+      onExit: () => calls.push('exit paid'),
+    })
+    order.defineTransition(validMove)
+    order.send('pay')
+
+    order.undoLastMove()
+
+    expect(calls).toEqual(['exit placed', 'enter paid', 'exit paid', 'enter placed'])
+  })
+
+  it('does not undo what the hooks wrote into the context', () => {
+    const order = new StateMachine('placed')
+    order.defineState('placed')
+    order.defineState('paid', {
+      onEnter: (context) => {
+        context.paidAt = 1
+      },
+    })
+    order.defineTransition(validMove)
+    order.send('pay')
+
+    order.undoLastMove()
+
+    expect(order.context.paidAt).toBe(1)
+  })
+
+  it('keeps the current state and the move in the history when the exit hook throws an error', () => {
+    const order = new StateMachine('placed')
+    order.defineState('placed')
+    order.defineState('paid', {
+      onExit: () => {
+        throw new Error('exit failed')
+      },
+    })
+    order.defineTransition(validMove)
+    order.send('pay')
+
+    expect(() => order.undoLastMove()).toThrow('exit failed')
+    expect(order.currentStateName).toBe('paid')
+    expect(recordedMoves(order)).toEqual([validMove])
+  })
+
+  it('has already moved back and removed the move when the enter hook throws an error', () => {
+    const order = new StateMachine('placed')
+    order.defineState('placed', {
+      onEnter: () => {
+        throw new Error('enter failed')
+      },
+    })
+    order.defineState('paid')
+    order.defineTransition(validMove)
+    order.send('pay')
+
+    expect(() => order.undoLastMove()).toThrow('enter failed')
+    expect(order.currentStateName).toBe('placed')
+    expect(order.history).toEqual([])
+  })
 })

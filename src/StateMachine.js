@@ -134,6 +134,21 @@ export class StateMachine {
   }
 
   /**
+   * Moves the machine back to the state it left on its last move, or does nothing if the
+   * history is empty. No guard is asked and the context is not restored. Runs the exit hook,
+   * then changes the current state and removes the move from the history, then runs the enter hook.
+   */
+  undoLastMove() {
+    const lastMove = this.#history.entries.at(-1)
+
+    if (lastMove === undefined) {
+      return
+    }
+
+    this.#moveBackAlong(lastMove)
+  }
+
+  /**
    * Guards are not consulted, so a listed event may still be refused
    * at the moment it is sent.
    *
@@ -229,6 +244,23 @@ export class StateMachine {
     fromState.exit(this.#context)
     this.#currentStateName = toState.name
     this.#history.record(new HistoryEntry(transition))
+    toState.enter(this.#context)
+  }
+
+  /**
+   * Moves the machine back along a recorded move. If the exit hook throws an error, the
+   * current state has not changed yet and the move is still recorded. If the enter hook
+   * throws an error, the current state has already changed and the move is removed.
+   *
+   * @param {HistoryEntry} lastMove - The newest entry in the history.
+   */
+  #moveBackAlong(lastMove) {
+    const fromState = this.#states.get(lastMove.toStateName)
+    const toState = this.#states.get(lastMove.fromStateName)
+
+    fromState.exit(this.#context)
+    this.#currentStateName = toState.name
+    this.#history.removeNewestEntry()
     toState.enter(this.#context)
   }
 }
