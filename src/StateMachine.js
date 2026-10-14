@@ -1,6 +1,8 @@
+import { HistoryEntry } from './HistoryEntry.js'
 import { State } from './State.js'
 import { StateRegistry } from './StateRegistry.js'
 import { Transition } from './Transition.js'
+import { TransitionHistory } from './TransitionHistory.js'
 import { TransitionRegistry } from './TransitionRegistry.js'
 import { BlockedTransitionError, DuplicateStateError, NoTransitionError, UnknownStateError } from './errors.js'
 import { EventName, StateName } from './names.js'
@@ -17,6 +19,7 @@ export class StateMachine {
   #context = {}
   #states = new StateRegistry()
   #transitions = new TransitionRegistry()
+  #history = new TransitionHistory()
 
   /**
    * Creates a machine that starts in the named state. That state can be defined after
@@ -57,6 +60,15 @@ export class StateMachine {
    */
   get stateNames() {
     return this.#states.stateNames
+  }
+
+  /**
+   * Builds a new array on every access, so the caller cannot change the history.
+   *
+   * @returns {HistoryEntry[]} - Every move the machine has made, oldest first.
+   */
+  get history() {
+    return this.#history.entries
   }
 
   /**
@@ -101,7 +113,7 @@ export class StateMachine {
 
   /**
    * Moves the machine along the first transition on the event whose guard allows it.
-   * Runs onExit of the current state, then changes the current state, then runs
+   * Runs onExit of the current state, then changes the current state and records the move, then runs
    * onEnter of the new one.
    *
    * @param {string} eventName - Name of the event to send.
@@ -131,6 +143,21 @@ export class StateMachine {
     this.#requireReadyToSend(eventName)
 
     return this.#findAllowedTransition(eventName) !== undefined
+  }
+
+  /**
+   * Moves the machine back to the state it left on its last move, or does nothing if the
+   * history is empty. No guard is asked and the context is not restored. Runs the exit hook,
+   * then changes the current state and removes the move from the history, then runs the enter hook.
+   */
+  undoLastMove() {
+    const lastMove = this.#history.entries.at(-1)
+
+    if (lastMove === undefined) {
+      return
+    }
+
+    this.#moveBackAlong(lastMove)
   }
 
   /**
@@ -231,9 +258,9 @@ export class StateMachine {
   }
 
   /**
-   * Runs the exit hook, then changes the current state, then runs the enter hook.
-   * If the exit hook throws an error, the current state has not changed yet. If the
-   * enter hook throws an error, the current state has already changed.
+   * Runs the exit hook, then changes the current state and records the move, then runs the enter hook.
+   * If the exit hook throws an error, the current state has not changed yet and no move is recorded.
+   * If the enter hook throws an error, the current state has already changed and the move is recorded.
    *
    * @param {Transition} transition - The transition to take.
    */
@@ -243,6 +270,24 @@ export class StateMachine {
 
     fromState.exit(this.#context)
     this.#currentStateName = toState.name
+    this.#history.record(new HistoryEntry(transition))
+    toState.enter(this.#context)
+  }
+
+  /**
+   * Moves the machine back along a recorded move. If the exit hook throws an error, the
+   * current state has not changed yet and the move is still recorded. If the enter hook
+   * throws an error, the current state has already changed and the move is removed.
+   *
+   * @param {HistoryEntry} lastMove - The newest entry in the history.
+   */
+  #moveBackAlong(lastMove) {
+    const fromState = this.#states.get(lastMove.toStateName)
+    const toState = this.#states.get(lastMove.fromStateName)
+
+    fromState.exit(this.#context)
+    this.#currentStateName = toState.name
+    this.#history.removeNewestEntry()
     toState.enter(this.#context)
   }
 }
