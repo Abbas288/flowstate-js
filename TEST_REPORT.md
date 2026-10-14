@@ -1,6 +1,6 @@
 # Test Report
 
-This report describes how flowstate-mini-js was tested and what the results were.
+This report describes how flowstate-js was tested and what the results were.
 
 ## Summary
 
@@ -21,8 +21,8 @@ works when it is imported through the `exports` in `package.json`, as a user imp
 ### Run the unit tests
 
 ```bash
-git clone https://github.com/Abbas288/flowstate-mini-js.git
-cd flowstate-mini-js
+git clone https://github.com/Abbas288/flowstate-js.git
+cd flowstate-js
 npm install
 npm test
 ```
@@ -334,8 +334,8 @@ Test-App itself rather than the module.
 ✓ test/errors.test.js > the error family > tells an unknown state apart from a duplicate one
 ✓ test/errors.test.js > the error family > tells a missing transition apart from a blocked one
 ✓ test/errors.test.js > the error family > says different things about the same state name
-✓ test/index.test.js > flowstate-mini-js > exports the state machine and the error types a caller can catch, and nothing else
-✓ test/index.test.js > flowstate-mini-js > lets a caller catch an error from the machine by the type it imported
+✓ test/index.test.js > flowstate-js > exports the state machine and the error types a caller can catch, and nothing else
+✓ test/index.test.js > flowstate-js > lets a caller catch an error from the machine by the type it imported
 ✓ test/names.test.js > StateName > gives back the text it was created from
 ✓ test/names.test.js > StateName > keeps spaces inside the name
 ✓ test/names.test.js > StateName > rejects a value that is not a non-empty string

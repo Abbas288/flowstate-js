@@ -1,4 +1,4 @@
-# flowstate-mini-js
+# flowstate-js
 
 A small finite state machine for JavaScript, with guards and hooks. No dependencies.
 
@@ -7,7 +7,7 @@ A small finite state machine for JavaScript, with guards and hooks. No dependenc
 A state machine keeps track of which state something is in, and which events may change
 that state. An order can go from `placed` to `paid`, but not straight to `shipped`.
 
-With `flowstate-mini-js` you can:
+With `flowstate-js` you can:
 
 - Define states, with hooks that run when the machine enters or leaves them.
 - Define transitions, each with an optional guard that decides if the move is allowed
@@ -38,8 +38,12 @@ therefore caught when you define the transition, not later when you send an even
 The package is not on npm. Install it from GitHub:
 
 ```bash
-npm install github:Abbas288/flowstate-mini-js
+npm install github:Abbas288/flowstate-js
 ```
+
+The module used to be called `flowstate-mini-js`. If you installed it under that name, nothing changes
+for you: the old address `github:Abbas288/flowstate-mini-js` leads here, and your imports from
+`flowstate-mini-js` keep working.
 
 Your project must use ES modules: set `"type": "module"` in your `package.json`, or name
 your files `.mjs`.
@@ -51,7 +55,7 @@ The other files in `src/` are internal, and Node.js refuses to load them from ou
 ## Quick start
 
 ```js
-import { StateMachine } from 'flowstate-mini-js'
+import { StateMachine } from 'flowstate-js'
 
 const order = new StateMachine('placed')
 
@@ -230,7 +234,7 @@ All three are read-only. Assigning to them throws `TypeError`.
 Two transitions leave `placed` on `pay`. The guards and hooks log when they run:
 
 ```js
-import { StateMachine } from 'flowstate-mini-js'
+import { StateMachine } from 'flowstate-js'
 
 const order = new StateMachine('placed')
 
@@ -295,7 +299,7 @@ Since `send` takes the first allowed transition ([step 3](#step-3)), put the tra
 the strictest guard first, and a transition without a guard last as the fallback:
 
 ```js
-import { StateMachine } from 'flowstate-mini-js'
+import { StateMachine } from 'flowstate-js'
 
 const order = new StateMachine('placed')
 
@@ -335,7 +339,7 @@ rules for names, or a hook that is not a function. It is not a `FlowStateError`,
 points to a bug in the calling code rather than a refused event.
 
 ```js
-import { StateMachine, BlockedTransitionError, NoTransitionError } from 'flowstate-mini-js'
+import { StateMachine, BlockedTransitionError, NoTransitionError } from 'flowstate-js'
 
 const order = new StateMachine('placed')
 
@@ -366,8 +370,8 @@ test-app/  A console app for trying the module by hand. It imports the module by
 ## Development
 
 ```bash
-git clone https://github.com/Abbas288/flowstate-mini-js.git
-cd flowstate-mini-js
+git clone https://github.com/Abbas288/flowstate-js.git
+cd flowstate-js
 npm install
 npm test
 ```
@@ -397,7 +401,7 @@ The test results are in [TEST_REPORT.md](TEST_REPORT.md).
 
 ## Contributing
 
-Report bugs and ask questions in [GitHub issues](https://github.com/Abbas288/flowstate-mini-js/issues).
+Report bugs and ask questions in [GitHub issues](https://github.com/Abbas288/flowstate-js/issues).
 Pull requests are welcome. Before you open one, add a test for your change and run
 `npm test`, `npm run lint` and `npm run format:check`.
 
