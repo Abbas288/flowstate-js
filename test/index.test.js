@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as flowstate from '../src/index.js'
 
-describe('flowstate-mini-js', () => {
+describe('flowstate-js', () => {
   it('exports the state machine and the error types a caller can catch, and nothing else', () => {
     expect(Object.keys(flowstate).sort()).toEqual([
       'BlockedTransitionError',
