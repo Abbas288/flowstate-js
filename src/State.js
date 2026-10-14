@@ -57,12 +57,11 @@ export class State {
   }
 
   /**
-   * Returns the value unchanged if it is a function or undefined, and throws a
-   * TypeError otherwise.
+   * Checks an optional hook.
    *
-   * @param {*} value - The value to check.
-   * @param {string} label - Hook name, used in the error message.
-   * @returns {((context: object) => void)|undefined} The same value.
+   * @param {*} value - The hook.
+   * @param {string} label - Its name, for the error message.
+   * @returns {((context: object) => void)|undefined} The hook.
    */
   #requireOptionalHook(value, label) {
     if (value !== undefined && typeof value !== 'function') {

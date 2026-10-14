@@ -54,9 +54,9 @@ export class StateRegistry {
   }
 
   /**
-   * Throws unless the value is a State.
+   * Checks that the value is a State.
    *
-   * @param {*} value - The value to check.
+   * @param {*} value - The value.
    */
   #requireState(value) {
     if (!(value instanceof State)) {
@@ -65,9 +65,9 @@ export class StateRegistry {
   }
 
   /**
-   * Throws a DuplicateStateError if a state with the name is already registered.
+   * Checks that the name is free.
    *
-   * @param {string} name - The name to check.
+   * @param {string} name - The name.
    */
   #requireUnusedName(name) {
     if (this.has(name)) {

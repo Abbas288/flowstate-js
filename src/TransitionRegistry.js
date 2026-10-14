@@ -38,9 +38,9 @@ export class TransitionRegistry {
   }
 
   /**
-   * Throws unless the value is a Transition.
+   * Checks that the value is a Transition.
    *
-   * @param {*} value - The value to check.
+   * @param {*} value - The value.
    */
   #requireTransition(value) {
     if (!(value instanceof Transition)) {

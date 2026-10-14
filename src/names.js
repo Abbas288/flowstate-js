@@ -29,21 +29,20 @@ class Name {
   }
 
   /**
-   * Tells whether the string has no characters at all.
+   * Checks for the empty string.
    *
-   * @param {string} value - The string to check.
-   * @returns {boolean} True if the string is empty.
+   * @param {string} value - The string.
+   * @returns {boolean} True if it is empty.
    */
   #isEmpty(value) {
     return value === ''
   }
 
   /**
-   * Tells whether the string starts or ends with whitespace, such as a space, a tab or a
-   * line break.
+   * Tabs and line breaks count as whitespace too.
    *
-   * @param {string} value - The string to check.
-   * @returns {boolean} True if trimming the string would change it.
+   * @param {string} value - The string.
+   * @returns {boolean} True if it starts or ends with whitespace.
    */
   #startsOrEndsWithWhitespace(value) {
     return value.trim() !== value

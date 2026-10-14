@@ -86,11 +86,10 @@ export class Transition {
   }
 
   /**
-   * Returns the value unchanged if it is a function or undefined, and throws a
-   * TypeError otherwise.
+   * Checks an optional guard.
    *
-   * @param {*} value - The value to check.
-   * @returns {((context: object) => boolean)|undefined} The same value.
+   * @param {*} value - The guard.
+   * @returns {((context: object) => boolean)|undefined} The guard.
    */
   #requireOptionalGuard(value) {
     if (value !== undefined && typeof value !== 'function') {

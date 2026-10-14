@@ -177,10 +177,9 @@ export class StateMachine {
   }
 
   /**
-   * Throws an UnknownStateError unless both the state the transition leaves and the
-   * state it enters have been defined on this machine.
+   * Checks both ends of the transition.
    *
-   * @param {Transition} transition - The transition to check.
+   * @param {Transition} transition - The transition.
    */
   #requireBothStatesDefined(transition) {
     this.#requireDefinedState(transition.fromStateName)
@@ -188,9 +187,9 @@ export class StateMachine {
   }
 
   /**
-   * Throws unless a state with that name has been defined on this machine.
+   * Checks that the state is defined.
    *
-   * @param {string} stateName - The name to look for.
+   * @param {string} stateName - The name.
    */
   #requireDefinedState(stateName) {
     if (!this.#states.has(stateName)) {
@@ -199,8 +198,7 @@ export class StateMachine {
   }
 
   /**
-   * Throws unless the event name is a valid EventName and the current state is defined.
-   * Creating an EventName is what checks the event name.
+   * Creating an EventName is what checks the event name, so the object is not kept.
    *
    * @param {*} eventName - The value to check.
    */
@@ -210,31 +208,29 @@ export class StateMachine {
   }
 
   /**
-   * Finds the transition send will take, and throws an error instead if there is none.
+   * Finds the transition send takes.
    *
-   * @param {string} eventName - Name of the event that was sent.
-   * @returns {Transition} The first transition whose guard allows the move.
+   * @param {string} eventName - The event.
+   * @returns {Transition} The transition.
    */
   #chooseTransition(eventName) {
     return this.#findAllowedTransition(eventName) ?? this.#throwRefusedEventError(eventName)
   }
 
   /**
-   * Asks the guards in definition order and stops at the first that allows the move.
+   * Finds the transition send would take.
    *
-   * @param {string} eventName - Name of the event to look up.
-   * @returns {Transition|undefined} The transition send would take, or undefined if there is none.
+   * @param {string} eventName - The event.
+   * @returns {Transition|undefined} The transition, if any.
    */
   #findAllowedTransition(eventName) {
     return this.#candidatesFor(eventName).find((candidate) => candidate.isAllowedIn(this.#context))
   }
 
   /**
-   * Throws NoTransitionError when no transition leaves the current state on the event.
-   * Throws BlockedTransitionError when such transitions exist but the guard of each one
-   * refuses the move.
+   * When every guard refuses, the error names only the first candidate.
    *
-   * @param {string} eventName - Name of the event that was refused.
+   * @param {string} eventName - The event.
    */
   #throwRefusedEventError(eventName) {
     const candidates = this.#candidatesFor(eventName)
@@ -247,20 +243,18 @@ export class StateMachine {
   }
 
   /**
-   * Finds the transitions that leave the current state on the event, in definition
-   * order. Guards are not asked.
+   * Guards are not asked here.
    *
-   * @param {string} eventName - Name of the event to look up.
-   * @returns {Transition[]} The transitions send could take, if their guards allow it.
+   * @param {string} eventName - The event.
+   * @returns {Transition[]} The candidates, in definition order.
    */
   #candidatesFor(eventName) {
     return this.#transitions.findAll({ from: this.#currentStateName, on: eventName })
   }
 
   /**
-   * Runs the exit hook, then changes the current state and records the move, then runs the enter hook.
-   * If the exit hook throws an error, the current state has not changed yet and no move is recorded.
-   * If the enter hook throws an error, the current state has already changed and the move is recorded.
+   * The move is recorded before onEnter runs, so the history matches the current state even if
+   * onEnter throws.
    *
    * @param {Transition} transition - The transition to take.
    */
@@ -275,9 +269,8 @@ export class StateMachine {
   }
 
   /**
-   * Moves the machine back along a recorded move. If the exit hook throws an error, the
-   * current state has not changed yet and the move is still recorded. If the enter hook
-   * throws an error, the current state has already changed and the move is removed.
+   * The move is removed before onEnter runs, so the history matches the current state even if
+   * onEnter throws.
    *
    * @param {HistoryEntry} lastMove - The newest entry in the history.
    */
