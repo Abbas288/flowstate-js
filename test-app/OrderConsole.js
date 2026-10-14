@@ -1,6 +1,6 @@
 import { createInterface } from 'node:readline'
 import { stdin, stdout } from 'node:process'
-import { FlowStateError } from 'flowstate-mini-js'
+import { FlowStateError } from 'flowstate-js'
 
 /**
  * Lets you drive the order flow from the terminal. You type a command, and the console
@@ -22,7 +22,7 @@ export class OrderConsole {
   /**
    * Creates a console for a machine. Nothing is read until start is called.
    *
-   * @param {import('flowstate-mini-js').StateMachine} machine - The machine the commands act on.
+   * @param {import('flowstate-js').StateMachine} machine - The machine the commands act on.
    */
   constructor(machine) {
     this.#machine = machine
@@ -34,7 +34,7 @@ export class OrderConsole {
   async start() {
     const terminal = createInterface({ input: stdin, output: stdout })
 
-    console.log('Test-App for flowstate-mini-js: an order that is placed, paid, shipped and delivered.')
+    console.log('Test-App for flowstate-js: an order that is placed, paid, shipped and delivered.')
     this.#printHelp()
     this.#askForCommand(terminal)
 

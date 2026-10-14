@@ -1,4 +1,4 @@
-import { StateMachine } from 'flowstate-mini-js'
+import { StateMachine } from 'flowstate-js'
 
 /**
  * The order flow the Test-App lets you try. An order is placed, paid, shipped and
