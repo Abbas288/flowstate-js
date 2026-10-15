@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { HistoryEntry } from '../src/HistoryEntry.js'
 import { Transition } from '../src/Transition.js'
 import { TransitionHistory } from '../src/TransitionHistory.js'
-import { expectSameItems } from './expectSameItems.js'
+import { expectSameItems } from './helpers/expectSameItems.js'
 
 const payMove = { from: 'placed', to: 'paid', on: 'pay' }
 const shipMove = { from: 'paid', to: 'shipped', on: 'ship' }
