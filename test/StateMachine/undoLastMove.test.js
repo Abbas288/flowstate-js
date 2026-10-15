@@ -6,13 +6,15 @@ import { recordedMoves } from '../helpers/recordedMoves.js'
 describe('StateMachine', () => {
   describe('undoLastMove', () => {
     it('moves back to the state it left on its last move', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = machineWithStates('placed', 'paid', 'shipped')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
+      order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
       order.send('pay')
+      order.send('ship')
 
       order.undoLastMove()
 
-      expect(order.currentStateName).toBe('placed')
+      expect(order.currentStateName).toBe('paid')
     })
 
     it('removes the undone move from the history', () => {

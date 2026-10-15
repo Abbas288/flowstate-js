@@ -29,6 +29,15 @@ export class TransitionHistory {
   }
 
   /**
+   * Gives the newest entry without removing it and without copying the history.
+   *
+   * @returns {HistoryEntry|undefined} The newest entry, or undefined if the history is empty.
+   */
+  get newestEntry() {
+    return this.#entries.at(-1)
+  }
+
+  /**
    * Removes the newest entry from the history and returns it.
    *
    * @returns {HistoryEntry|undefined} - The entry that was removed, or undefined if the history was empty.

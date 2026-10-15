@@ -127,7 +127,7 @@ export class StateMachine {
 
     const transition = this.#chooseTransition(eventName)
 
-    this.#moveAlong(transition)
+    this.#moveAlongWithHooks(transition)
   }
 
   /**
@@ -151,13 +151,13 @@ export class StateMachine {
    * then changes the current state and removes the move from the history, then runs the enter hook.
    */
   undoLastMove() {
-    const lastMove = this.#history.entries.at(-1)
+    const lastMove = this.#history.newestEntry
 
     if (lastMove === undefined) {
       return
     }
 
-    this.#moveBackAlong(lastMove)
+    this.#moveBackAlongWithHooks(lastMove)
   }
 
   /**
@@ -239,7 +239,9 @@ export class StateMachine {
       throw new NoTransitionError(this.#currentStateName, eventName)
     }
 
-    throw new BlockedTransitionError(candidates[0])
+    const firstBlocked = candidates[0]
+
+    throw new BlockedTransitionError(firstBlocked)
   }
 
   /**
@@ -258,7 +260,7 @@ export class StateMachine {
    *
    * @param {Transition} transition - The transition to take.
    */
-  #moveAlong(transition) {
+  #moveAlongWithHooks(transition) {
     const fromState = this.#states.get(transition.fromStateName)
     const toState = this.#states.get(transition.toStateName)
 
@@ -274,7 +276,7 @@ export class StateMachine {
    *
    * @param {HistoryEntry} lastMove - The newest entry in the history.
    */
-  #moveBackAlong(lastMove) {
+  #moveBackAlongWithHooks(lastMove) {
     const fromState = this.#states.get(lastMove.toStateName)
     const toState = this.#states.get(lastMove.fromStateName)
 

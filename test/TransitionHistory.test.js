@@ -94,4 +94,23 @@ describe('TransitionHistory', () => {
 
     expect(history.removeNewestEntry()).toBeUndefined()
   })
+
+  it('gives the newest entry without removing it', () => {
+    const history = new TransitionHistory()
+    const paying = new HistoryEntry(new Transition(payMove))
+    const shipping = new HistoryEntry(new Transition(shipMove))
+    history.record(paying)
+    history.record(shipping)
+
+    const newest = history.newestEntry
+
+    expect(newest).toBe(shipping)
+    expectSameItems(history.entries, [paying, shipping])
+  })
+
+  it('gives undefined as the newest entry while empty', () => {
+    const history = new TransitionHistory()
+
+    expect(history.newestEntry).toBeUndefined()
+  })
 })
