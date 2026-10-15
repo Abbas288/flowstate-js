@@ -171,12 +171,24 @@ export class StateMachine {
    * @returns {string[]} Names of the events leaving that state, each once, in the order first defined.
    * @throws {UnknownStateError} If the state has not been defined.
    */
-  eventNamesFrom(fromStateName) {
+  listEventNamesFrom(fromStateName) {
     this.#requireDefinedState(new StateName(fromStateName).text)
 
     const eventNames = this.#transitions.findAll({ from: fromStateName }).map((transition) => transition.eventName)
 
     return [...new Set(eventNames)]
+  }
+
+  /**
+   * Lists the events that have a transition out of the state, exactly like listEventNamesFrom.
+   *
+   * @deprecated Use listEventNamesFrom instead. It works the same, and its name says what it does.
+   * @param {string} fromStateName - Name of the state to look out from.
+   * @returns {string[]} Names of the events leaving that state, each once, in the order first defined.
+   * @throws {UnknownStateError} If the state has not been defined.
+   */
+  eventNamesFrom(fromStateName) {
+    return this.listEventNamesFrom(fromStateName)
   }
 
   /**

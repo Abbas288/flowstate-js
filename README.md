@@ -194,7 +194,7 @@ It never throws `NoTransitionError` or `BlockedTransitionError`. It returns `fal
 ### List the events out of a state
 
 ```js
-machine.eventNamesFrom(stateName)
+machine.listEventNamesFrom(stateName)
 ```
 
 Returns the names of the events that have a transition out of `stateName`. Each name is
@@ -204,6 +204,9 @@ The guards are not asked, so `send` with a listed event can still throw
 `BlockedTransitionError`.
 
 Throws `UnknownStateError` if `stateName` is not a defined state.
+
+`machine.eventNamesFrom(stateName)` does exactly the same and still works, but it is
+deprecated. Use `listEventNamesFrom`: the old name has no verb, so it does not say what it does.
 
 ### Undo the last move
 
@@ -344,12 +347,12 @@ Each error the machine throws for a broken rule extends `FlowStateError`. Catch
 `FlowStateError` to handle all of them, or catch one class for a single case. `error.name`
 is the class name, such as `'NoTransitionError'`.
 
-| Error                    | Thrown when                                                                                                                                                                                                                                                                                                              | Properties                                  |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
-| `UnknownStateError`      | [`defineTransition`](#define-a-transition) gets a `from` or `to` that is not a defined state.<br>[`eventNamesFrom`](#list-the-events-out-of-a-state) gets a state name that is not defined.<br>[`send`](#send-an-event) or [`canSend`](#check-an-event-before-sending-it) is called before the initial state is defined. | `stateName`                                 |
-| `DuplicateStateError`    | [`defineState`](#define-a-state) gets a name that is already defined.                                                                                                                                                                                                                                                    | `stateName`                                 |
-| `NoTransitionError`      | [`send`](#send-an-event) gets an event with no transition out of the current state.                                                                                                                                                                                                                                      | `fromStateName`, `eventName`                |
-| `BlockedTransitionError` | [`send`](#send-an-event) gets an event whose transitions all have guards that refuse the move.                                                                                                                                                                                                                           | `fromStateName`, `eventName`, `toStateName` |
+| Error                    | Thrown when                                                                                                                                                                                                                                                                                                                  | Properties                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `UnknownStateError`      | [`defineTransition`](#define-a-transition) gets a `from` or `to` that is not a defined state.<br>[`listEventNamesFrom`](#list-the-events-out-of-a-state) gets a state name that is not defined.<br>[`send`](#send-an-event) or [`canSend`](#check-an-event-before-sending-it) is called before the initial state is defined. | `stateName`                                 |
+| `DuplicateStateError`    | [`defineState`](#define-a-state) gets a name that is already defined.                                                                                                                                                                                                                                                        | `stateName`                                 |
+| `NoTransitionError`      | [`send`](#send-an-event) gets an event with no transition out of the current state.                                                                                                                                                                                                                                          | `fromStateName`, `eventName`                |
+| `BlockedTransitionError` | [`send`](#send-an-event) gets an event whose transitions all have guards that refuse the move.                                                                                                                                                                                                                               | `fromStateName`, `eventName`, `toStateName` |
 
 `BlockedTransitionError` has one `toStateName`. When several transitions leave the current state
 on the event and all are refused, it is the `to` of the one defined first. In the example under

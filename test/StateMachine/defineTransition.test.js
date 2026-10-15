@@ -92,11 +92,12 @@ describe('StateMachine', () => {
     })
   })
 
-  describe('eventNamesFrom', () => {
+  // eventNamesFrom is the deprecated name. Both names must behave exactly the same.
+  describe.each(['listEventNamesFrom', 'eventNamesFrom'])('%s', (methodName) => {
     it('sees no way out of a state before any transition is defined', () => {
       const order = machineWithStates('placed')
 
-      expect(order.eventNamesFrom('placed')).toEqual([])
+      expect(order[methodName]('placed')).toEqual([])
     })
 
     it('lists the events that lead out of a state, in definition order', () => {
@@ -105,7 +106,7 @@ describe('StateMachine', () => {
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'placed', to: 'void', on: 'cancel' })
 
-      expect(order.eventNamesFrom('placed')).toEqual(['pay', 'cancel'])
+      expect(order[methodName]('placed')).toEqual(['pay', 'cancel'])
     })
 
     it('lists an event once even when several transitions share it', () => {
@@ -114,7 +115,7 @@ describe('StateMachine', () => {
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay' })
 
-      expect(order.eventNamesFrom('placed')).toEqual(['pay'])
+      expect(order[methodName]('placed')).toEqual(['pay'])
     })
 
     it('keeps a shared event where it was first defined', () => {
@@ -124,7 +125,7 @@ describe('StateMachine', () => {
       order.defineTransition({ from: 'placed', to: 'void', on: 'cancel' })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay' })
 
-      expect(order.eventNamesFrom('placed')).toEqual(['pay', 'cancel'])
+      expect(order[methodName]('placed')).toEqual(['pay', 'cancel'])
     })
 
     it('lists only events that leave the state it was asked about', () => {
@@ -133,7 +134,7 @@ describe('StateMachine', () => {
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
 
-      expect(order.eventNamesFrom('placed')).toEqual(['pay'])
+      expect(order[methodName]('placed')).toEqual(['pay'])
     })
 
     it('sees no way out of a state that no transition leaves', () => {
@@ -141,7 +142,7 @@ describe('StateMachine', () => {
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
-      expect(order.eventNamesFrom('paid')).toEqual([])
+      expect(order[methodName]('paid')).toEqual([])
     })
 
     it('throws an UnknownStateError for a state that was never defined', () => {
@@ -149,15 +150,15 @@ describe('StateMachine', () => {
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
-      expect(() => order.eventNamesFrom('shipped')).toThrow(UnknownStateError)
-      expect(() => order.eventNamesFrom('shipped')).toThrow(expect.objectContaining({ stateName: 'shipped' }))
+      expect(() => order[methodName]('shipped')).toThrow(UnknownStateError)
+      expect(() => order[methodName]('shipped')).toThrow(expect.objectContaining({ stateName: 'shipped' }))
     })
 
     it('throws a TypeError when the state name is not a non-empty string', () => {
       const order = machineWithStates('placed')
 
       for (const invalidName of invalidNames) {
-        expect(() => order.eventNamesFrom(invalidName)).toThrow(TypeError)
+        expect(() => order[methodName](invalidName)).toThrow(TypeError)
       }
     })
 
@@ -166,16 +167,16 @@ describe('StateMachine', () => {
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
 
-      expect(order.eventNamesFrom('placed')).toEqual(['pay'])
+      expect(order[methodName]('placed')).toEqual(['pay'])
     })
 
     it('cannot be changed through the list of events it returns', () => {
       const order = machineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
-      order.eventNamesFrom('placed').push('forge')
+      order[methodName]('placed').push('forge')
 
-      expect(order.eventNamesFrom('placed')).toEqual(['pay'])
+      expect(order[methodName]('placed')).toEqual(['pay'])
     })
   })
 })

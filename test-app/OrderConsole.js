@@ -122,7 +122,7 @@ export class OrderConsole {
    * @param {string} [stateName] - Name of the state. Without it, the current state is used.
    */
   #printEventNames(stateName = this.#machine.currentStateName) {
-    console.log(`  eventNamesFrom("${stateName}"):`, this.#machine.eventNamesFrom(stateName))
+    console.log(`  listEventNamesFrom("${stateName}"):`, this.#machine.listEventNamesFrom(stateName))
   }
 
   /**
