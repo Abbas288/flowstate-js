@@ -1,6 +1,7 @@
 # flowstate-js
 
-A small finite state machine for JavaScript, with guards and hooks. No dependencies.
+A small finite state machine for JavaScript, with guards, hooks, a history of moves and undo. No
+dependencies.
 
 ## What it does
 
@@ -14,6 +15,7 @@ With `flowstate-js` you can:
   right now.
 - Send an event to move the machine, or first ask whether the event would move it.
 - List the events that lead out of a state.
+- Read the moves the machine has made, and undo the last one.
 - Tell from the error type why an event was refused: no transition exists, or a guard
   blocked it.
 
@@ -203,15 +205,35 @@ The guards are not asked, so `send` with a listed event can still throw
 
 Throws `UnknownStateError` if `stateName` is not a defined state.
 
+### Undo the last move
+
+```js
+machine.undoLastMove()
+```
+
+Moves the machine back to the state it left on its last move, and removes that move from the
+history. Returns `undefined`. If there is no move to undo, it does nothing.
+
+- No guard is asked. Undoing a move is not a new move.
+- The hooks run as for any move: `onExit` of the state it leaves, then `onEnter` of the state it
+  moves back to.
+- The context is not restored. Values that a hook wrote into it stay.
+
+If a hook throws an error, `undoLastMove` passes it on unchanged:
+
+- If `onExit` throws, the machine has not moved, and the move is still in the history.
+- If `onEnter` throws, the machine has already moved back, and the move is removed.
+
 ### Properties
 
-All three are read-only. Assigning to them throws `TypeError`.
+All four are read-only. Assigning to them throws `TypeError`.
 
-| Property           | Type       | Value                                                                              |
-| ------------------ | ---------- | ---------------------------------------------------------------------------------- |
-| `currentStateName` | `string`   | Name of the state the machine is in. Changes only when `send` moves the machine.   |
-| `context`          | `object`   | Your data for guards and hooks. Starts as `{}`. Change its properties, not itself. |
-| `stateNames`       | `string[]` | Names of the defined states, in definition order. A new copy on every read.        |
+| Property           | Type             | Value                                                                                                                                  |
+| ------------------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `currentStateName` | `string`         | Name of the state the machine is in. Changes only when `send` or `undoLastMove` moves the machine.                                     |
+| `context`          | `object`         | Your data for guards and hooks. Starts as `{}`. Change its properties, not itself.                                                     |
+| `stateNames`       | `string[]`       | Names of the defined states, in definition order. A new copy on every read.                                                            |
+| `history`          | `HistoryEntry[]` | The moves the machine has made, oldest first. Each entry has `fromStateName`, `toStateName` and `eventName`. A new copy on every read. |
 
 ## What happens when you send an event
 
@@ -226,7 +248,7 @@ All three are read-only. Assigning to them throws `TypeError`.
    guard refused, it throws `BlockedTransitionError`. In both cases the machine stays where
    it was and no hook runs.
 5. <a id="step-5"></a>It runs `onExit` of the current state, then changes the current
-   state, then runs `onEnter` of the new state. A transition from a state to itself runs
+   state and records the move in the history, then runs `onEnter` of the new state. A transition from a state to itself runs
    both hooks too.
 
 ### Example
@@ -290,8 +312,9 @@ console.log(order.canSend('pay')) // false
 
 If a guard or a hook throws an error, `send` passes it on unchanged:
 
-- If a guard or `onExit` throws, the machine has not moved.
-- If `onEnter` throws, the machine has already moved to the new state.
+- If a guard or `onExit` throws, the machine has not moved, and nothing is recorded.
+- If `onEnter` throws, the machine has already moved to the new state, and the move is in the
+  history.
 
 ## Choosing between transitions
 

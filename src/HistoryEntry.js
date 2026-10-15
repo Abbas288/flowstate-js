@@ -9,10 +9,11 @@ export class HistoryEntry {
   #eventName
 
   /**
-   * Takes the names of the two states and the event from the transition. The guard
-   * is left out, since the move has already happened.
+   * Creates an entry for a move along the transition. Only the three names are kept. The
+   * guard is left out, since the move has already happened.
    *
    * @param {Transition} transition - The transition the machine moved along.
+   * @throws {TypeError} If the value is not a Transition.
    */
   constructor(transition) {
     if (!(transition instanceof Transition)) {
@@ -25,27 +26,29 @@ export class HistoryEntry {
   }
 
   /**
-   * The machine was in this state when the event was sent.
+   * Gets the name of the state the machine left. It was the current state when the event
+   * was sent.
    *
-   * @returns {string} - Name of the state the machine left.
+   * @returns {string} Name of the state the machine left.
    */
   get fromStateName() {
     return this.#fromStateName
   }
 
   /**
-   * This may be the same state that the machine left.
+   * Gets the name of the state the machine entered. It may be the same as the state it left.
    *
-   * @returns {string} - Name of the state the machine entered.
+   * @returns {string} Name of the state the machine entered.
    */
   get toStateName() {
     return this.#toStateName
   }
 
   /**
-   * This is the name that was passed to send.
+   * Gets the name of the event that made the machine move. It is the name that was passed
+   * to send.
    *
-   * @returns {string} - Name of the event that made the machine move.
+   * @returns {string} Name of the event that made the machine move.
    */
   get eventName() {
     return this.#eventName

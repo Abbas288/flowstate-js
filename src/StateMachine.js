@@ -32,8 +32,8 @@ export class StateMachine {
   }
 
   /**
-   * Gets the name of the state the machine is in. It changes only when send moves the
-   * machine, and it cannot be set from outside.
+   * Gets the name of the state the machine is in. It changes only when send or undoLastMove
+   * moves the machine, and it cannot be set from outside.
    *
    * @returns {string} Name of the state the machine is in.
    */
@@ -63,9 +63,10 @@ export class StateMachine {
   }
 
   /**
-   * Builds a new array on every access, so the caller cannot change the history.
+   * Gets the moves the machine has made, oldest first. The array is a copy, so changing it
+   * does not change the history.
    *
-   * @returns {HistoryEntry[]} - Every move the machine has made, oldest first.
+   * @returns {HistoryEntry[]} Every move the machine has made, oldest first.
    */
   get history() {
     return this.#history.entries
@@ -149,6 +150,8 @@ export class StateMachine {
    * Moves the machine back to the state it left on its last move, or does nothing if the
    * history is empty. No guard is asked and the context is not restored. Runs the exit hook,
    * then changes the current state and removes the move from the history, then runs the enter hook.
+   *
+   * @throws {*} Any error that a hook throws, passed on unchanged.
    */
   undoLastMove() {
     const lastMove = this.#history.newestEntry

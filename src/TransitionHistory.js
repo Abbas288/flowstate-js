@@ -7,9 +7,10 @@ export class TransitionHistory {
   #entries = []
 
   /**
-   * Stores an entry after every entry recorded so far.
+   * Adds an entry after the ones recorded so far.
    *
    * @param {HistoryEntry} entry - The move the machine has just made.
+   * @throws {TypeError} If the value is not a HistoryEntry.
    */
   record(entry) {
     if (!(entry instanceof HistoryEntry)) {
@@ -20,16 +21,17 @@ export class TransitionHistory {
   }
 
   /**
-   * Builds a new array on every access, so the caller cannot change the history.
+   * Gets every recorded entry, oldest first. The array is a copy, so changing it does not
+   * change the history.
    *
-   * @returns {HistoryEntry[]} - Every recorded entry, oldest first.
+   * @returns {HistoryEntry[]} Every recorded entry, oldest first.
    */
   get entries() {
     return [...this.#entries]
   }
 
   /**
-   * Gives the newest entry without removing it and without copying the history.
+   * Gets the newest entry without removing it, and without copying the history.
    *
    * @returns {HistoryEntry|undefined} The newest entry, or undefined if the history is empty.
    */
@@ -40,7 +42,7 @@ export class TransitionHistory {
   /**
    * Removes the newest entry from the history and returns it.
    *
-   * @returns {HistoryEntry|undefined} - The entry that was removed, or undefined if the history was empty.
+   * @returns {HistoryEntry|undefined} The entry that was removed, or undefined if the history was empty.
    */
   removeNewestEntry() {
     return this.#entries.pop()
