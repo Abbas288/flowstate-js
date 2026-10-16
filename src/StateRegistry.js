@@ -8,8 +8,8 @@ export class StateRegistry {
   #statesByName = new Map()
 
   /**
-   * Stores a state under its own name. A name can be used only once, since
-   * replacing a state would silently throw away the earlier one's hooks.
+   * Stores a state under its own name. A name can be used once. The state stored first, and
+   * its hooks, are kept.
    *
    * @param {State} state - The state to store.
    * @throws {TypeError} If the value is not a State.
@@ -44,8 +44,7 @@ export class StateRegistry {
   }
 
   /**
-   * Gets the names of the registered states. The array is new on every access, so the
-   * caller cannot change the registry.
+   * Gets the names of the registered states, in a new array each time.
    *
    * @returns {string[]} Names of every registered state, in registration order.
    */

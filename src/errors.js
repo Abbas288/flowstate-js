@@ -1,7 +1,4 @@
 /**
- * The Transition type, for the JSDoc below. It is a type only, so loading the errors
- * does not load the Transition class.
- *
  * @typedef {import('./Transition.js').Transition} Transition
  */
 
@@ -9,20 +6,19 @@
  * Base class for every error the machine throws when one of its rules is broken.
  * Catch it to handle all of them, including kinds added in later versions.
  *
- * A wrong argument is not one of these. If a name breaks the rule described on
- * StateMachine, or a hook or guard is not a function, the built-in TypeError is thrown
- * instead, since that is a mistake in the calling code.
+ * A wrong argument is a mistake in the calling code, and the built-in TypeError is thrown
+ * instead: for a name that breaks the rule described on StateMachine, or a hook or guard
+ * that is not a function.
  */
 class FlowStateError extends Error {
   /**
-   * Names the error after its own class, so a log line says which kind it was.
+   * Creates the error. Its name is the name of its class, such as UnknownStateError, not "Error".
    *
    * @param {string} message - What went wrong, in plain words.
    */
   constructor(message) {
     super(message)
 
-    // Logs the actual class name (e.g., UnknownStateError) instead of "Error".
     this.name = this.constructor.name
   }
 }
@@ -35,8 +31,7 @@ class StateNameError extends FlowStateError {
   #stateName
 
   /**
-   * Stores the state name next to the message, so that code can read it without
-   * parsing the message.
+   * Stores the state name next to the message.
    *
    * @param {string} message - What went wrong, in plain words.
    * @param {string} stateName - The state name the error is about.
@@ -48,7 +43,7 @@ class StateNameError extends FlowStateError {
   }
 
   /**
-   * Gets the state name on its own, so that code does not have to parse the message.
+   * Gets the state name without the rest of the message.
    *
    * @returns {string} The state name the error is about.
    */
@@ -72,8 +67,8 @@ class UnknownStateError extends StateNameError {
 }
 
 /**
- * Thrown when defineState is called with a name that is already defined. The state
- * defined first, and its hooks, are kept.
+ * Thrown when a second state is defined with a name already in use. The state defined
+ * first, and its hooks, are kept.
  */
 class DuplicateStateError extends StateNameError {
   /**
@@ -87,16 +82,15 @@ class DuplicateStateError extends StateNameError {
 }
 
 /**
- * Holds the state and event names for the errors below that say why send refused
- * an event. It is not exported.
+ * Holds the state and event names for the errors below about a refused event. It is
+ * not exported.
  */
 class RefusedEventError extends FlowStateError {
   #fromStateName
   #eventName
 
   /**
-   * Stores the state and event names next to the message, so that code can read them
-   * without parsing the message.
+   * Stores the state and event names next to the message.
    *
    * @param {string} message - What went wrong, in plain words.
    * @param {object} refusedEvent - The event and the state it was sent in, such as a Transition.
@@ -111,8 +105,8 @@ class RefusedEventError extends FlowStateError {
   }
 
   /**
-   * Gets the name of the state the machine was in when it refused the event. The
-   * machine is still in that state, since a refused event changes nothing.
+   * Gets the name of the state the machine was in when it refused the event. A refused
+   * event leaves the machine in that state.
    *
    * @returns {string} Name of the state the machine was in.
    */
@@ -131,7 +125,7 @@ class RefusedEventError extends FlowStateError {
 }
 
 /**
- * Thrown by send when no transition leaves the current state on the event. Either
+ * Thrown when no transition leaves the current state on the event. Either
  * the event was sent in the wrong state, or a transition is missing.
  */
 class NoTransitionError extends RefusedEventError {
@@ -147,7 +141,7 @@ class NoTransitionError extends RefusedEventError {
 }
 
 /**
- * Thrown by send when transitions exist for the event but the guard of each one
+ * Thrown when transitions exist for the event but the guard of each one
  * refuses the move. The same event may succeed later, once the context changes.
  */
 class BlockedTransitionError extends RefusedEventError {
@@ -221,8 +215,7 @@ class NoPathError extends FlowStateError {
 
 /*
  * The error types a caller can catch: FlowStateError for every error the machine
- * throws, or one concrete kind for a single case. StateNameError and RefusedEventError
- * are not exported, since they only hold fields shared by the errors that extend them.
+ * throws, or one concrete kind for a single case.
  */
 // prettier-ignore
 export {

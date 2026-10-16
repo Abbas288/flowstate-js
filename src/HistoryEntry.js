@@ -9,8 +9,7 @@ export class HistoryEntry {
   #eventName
 
   /**
-   * Creates an entry for a move along the transition. Only the three names are kept. The
-   * guard is left out, since the move has already happened.
+   * Creates an entry for a move along the transition. Keeps the three names, not the guard.
    *
    * @param {Transition} transition - The transition the machine moved along.
    * @throws {TypeError} If the value is not a Transition.
@@ -45,8 +44,7 @@ export class HistoryEntry {
   }
 
   /**
-   * Gets the name of the event that made the machine move. It is the name that was passed
-   * to send.
+   * Gets the name of the event that made the machine move.
    *
    * @returns {string} Name of the event that made the machine move.
    */

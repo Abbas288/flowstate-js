@@ -21,8 +21,7 @@ export class TransitionHistory {
   }
 
   /**
-   * Gets every recorded entry, oldest first. The array is a copy, so changing it does not
-   * change the history.
+   * Gets every recorded entry, oldest first, in a new array each time.
    *
    * @returns {HistoryEntry[]} Every recorded entry, oldest first.
    */

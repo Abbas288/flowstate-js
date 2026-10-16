@@ -50,11 +50,11 @@ class Name {
 }
 
 /**
- * The name of a state, as used by State and by the from and to of a Transition.
+ * The name of a state.
  */
 export class StateName extends Name {}
 
 /**
- * The name of an event, as used by the on of a Transition and by send and canSend.
+ * The name of an event.
  */
 export class EventName extends Name {}

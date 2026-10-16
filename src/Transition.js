@@ -10,8 +10,7 @@ export class Transition {
   #guard
 
   /**
-   * Creates a transition. Only the fields themselves are checked here. StateMachine
-   * checks that both states exist when the transition is defined on it.
+   * Creates a transition. Checks the fields, not whether the two states exist.
    *
    * @param {object} move - The three names that make up the move, plus an optional guard.
    * @param {string} move.from - Name of the state to leave.
@@ -71,8 +70,8 @@ export class Transition {
 
   /**
    * Tells whether the guard allows the move in the given context. A transition without a
-   * guard is always allowed. The guard runs on every call, so its answer can change as
-   * the context changes.
+   * guard is always allowed. The guard runs on every call, and its answer can change with
+   * the context.
    *
    * @param {object} context - The state machine's shared context.
    * @returns {boolean} True if this transition may run right now.

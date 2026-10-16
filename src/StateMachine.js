@@ -37,8 +37,8 @@ export class StateMachine {
   }
 
   /**
-   * Gets the name of the state the machine is in. It changes only when send or undoLastMove
-   * moves the machine, and it cannot be set from outside.
+   * Gets the name of the state the machine is in. It changes only when the machine moves, and it
+   * cannot be set from outside.
    *
    * @returns {string} Name of the state the machine is in.
    */
@@ -48,8 +48,7 @@ export class StateMachine {
 
   /**
    * Gets the object that holds your own data for guards and hooks. Every guard and hook
-   * receives this same object, so a value written here can be read there. The object
-   * cannot be replaced.
+   * receives this same object. The object cannot be replaced.
    *
    * @returns {object} The context every hook and guard is handed.
    */
@@ -58,8 +57,7 @@ export class StateMachine {
   }
 
   /**
-   * Gets the names of the states defined so far. The array is a copy, so changing it
-   * does not change the machine.
+   * Gets the names of the states defined so far, in a new array each time.
    *
    * @returns {string[]} Names of every defined state, in definition order.
    */
@@ -68,8 +66,7 @@ export class StateMachine {
   }
 
   /**
-   * Gets the moves the machine has made, oldest first. The array is a copy, so changing it
-   * does not change the history.
+   * Gets the moves the machine has made, oldest first, in a new array each time.
    *
    * @returns {HistoryEntry[]} Every move the machine has made, oldest first.
    */
@@ -85,7 +82,7 @@ export class StateMachine {
    * @param {object} [options] - The hooks to run on the way in and out.
    * @param {(context: object) => void} [options.onEnter] - Runs on entering this state.
    * @param {(context: object) => void} [options.onExit] - Runs on leaving this state.
-   * @returns {StateMachine} This machine, so that definitions can be chained.
+   * @returns {StateMachine} This machine, for chaining.
    * @throws {TypeError} If a hook is not a function.
    * @throws {DuplicateStateError} If a state with the name is already defined.
    */
@@ -104,7 +101,7 @@ export class StateMachine {
    * @param {string} move.to - Name of the state to enter.
    * @param {string} move.on - Name of the triggering event.
    * @param {(context: object) => boolean} [move.guard] - Decides if the move is allowed.
-   * @returns {StateMachine} This machine, so that definitions can be chained.
+   * @returns {StateMachine} This machine, for chaining.
    * @throws {TypeError} If the guard is not a function.
    * @throws {UnknownStateError} If the from state or the to state has not been defined.
    */
@@ -169,8 +166,7 @@ export class StateMachine {
   }
 
   /**
-   * Lists the events that have a transition out of the state. Guards are not asked,
-   * so sending a listed event can still throw a BlockedTransitionError.
+   * Lists the events that have a transition out of the state, even those a guard would block right now.
    *
    * @param {string} fromStateName - Name of the state to look out from.
    * @returns {string[]} Names of the events leaving that state, each once, in the order first defined.
@@ -187,7 +183,7 @@ export class StateMachine {
   /**
    * Lists the events that have a transition out of the state, exactly like listEventNamesFrom.
    *
-   * @deprecated Use listEventNamesFrom instead. It works the same, and its name says what it does.
+   * @deprecated Use listEventNamesFrom instead.
    * @param {string} fromStateName - Name of the state to look out from.
    * @returns {string[]} Names of the events leaving that state, each once, in the order first defined.
    * @throws {UnknownStateError} If the state has not been defined.
@@ -241,7 +237,8 @@ export class StateMachine {
   }
 
   /**
-   * Creating an EventName is what checks the event name, so the object is not kept.
+   * Checks the event name and the current state. Creating an EventName checks the name; the
+   * object is not kept.
    *
    * @param {*} eventName - The value to check.
    */
@@ -272,7 +269,7 @@ export class StateMachine {
   }
 
   /**
-   * Finds the transition send takes.
+   * Chooses the transition the machine moves along, or throws an error that says why the event is refused.
    *
    * @param {string} eventName - The event.
    * @returns {Transition} The transition.
@@ -282,7 +279,7 @@ export class StateMachine {
   }
 
   /**
-   * Finds the transition send would take.
+   * Finds the first candidate whose guard allows the move.
    *
    * @param {string} eventName - The event.
    * @returns {Transition|undefined} The transition, if any.
@@ -319,8 +316,8 @@ export class StateMachine {
   }
 
   /**
-   * The move is recorded before onEnter runs, so the history matches the current state even if
-   * onEnter throws.
+   * Records the move before onEnter runs. If onEnter throws, the machine stays in the new state,
+   * and the move is already in the history.
    *
    * @param {Transition} transition - The transition to take.
    */
@@ -335,8 +332,8 @@ export class StateMachine {
   }
 
   /**
-   * The move is removed before onEnter runs, so the history matches the current state even if
-   * onEnter throws.
+   * Removes the move before onEnter runs. If onEnter throws, the machine stays in the state it
+   * moved back to, and the move is already gone from the history.
    *
    * @param {HistoryEntry} lastMove - The newest entry in the history.
    */
