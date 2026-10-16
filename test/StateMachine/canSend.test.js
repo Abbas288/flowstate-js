@@ -3,33 +3,33 @@ import { StateMachine } from '../../src/StateMachine.js'
 import { UnknownStateError } from '../../src/errors.js'
 import { expectSameItems } from '../helpers/expectSameItems.js'
 import { invalidNames } from '../helpers/fixtures.js'
-import { machineWithStates } from '../helpers/machineWithStates.js'
+import { makeMachineWithStates } from '../helpers/makeMachineWithStates.js'
 
 describe('StateMachine', () => {
   describe('canSend', () => {
     it('answers true for an event that would move the machine', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       expect(order.canSend('pay')).toBe(true)
     })
 
     it('answers false for an event that has no transition from the current state', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       expect(order.canSend('ship')).toBe(false)
     })
 
     it('answers false when the guard blocks the transition', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
 
       expect(order.canSend('pay')).toBe(false)
     })
 
     it('answers true when a later transition on the event is allowed', () => {
-      const order = machineWithStates('placed', 'paid', 'rejected')
+      const order = makeMachineWithStates('placed', 'paid', 'rejected')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => true })
 
@@ -37,7 +37,7 @@ describe('StateMachine', () => {
     })
 
     it('changes its answer when the context changes', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({
         from: 'placed',
         to: 'paid',
@@ -53,7 +53,7 @@ describe('StateMachine', () => {
     })
 
     it('does not move the machine when it answers true', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       expect(order.canSend('pay')).toBe(true)
@@ -74,7 +74,7 @@ describe('StateMachine', () => {
 
     it('passes its own context object to the guard', () => {
       const guard = vi.fn(() => true)
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard })
 
       order.canSend('pay')
@@ -85,7 +85,7 @@ describe('StateMachine', () => {
 
     it('does not ask a later guard once an earlier one allows the move', () => {
       const laterGuard = vi.fn(() => true)
-      const order = machineWithStates('placed', 'paid', 'rejected')
+      const order = makeMachineWithStates('placed', 'paid', 'rejected')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => true })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: laterGuard })
 
@@ -95,7 +95,7 @@ describe('StateMachine', () => {
     })
 
     it('throws a TypeError when the event name is not a non-empty string', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       for (const invalidName of invalidNames) {
@@ -114,7 +114,7 @@ describe('StateMachine', () => {
     })
 
     it('passes on an error that the guard throws, instead of answering false', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({
         from: 'placed',
         to: 'paid',

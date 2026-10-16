@@ -2,12 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { StateMachine } from '../../src/StateMachine.js'
 import { NoPathError, UnknownStateError } from '../../src/errors.js'
 import { invalidNames } from '../helpers/fixtures.js'
-import { machineWithStates } from '../helpers/machineWithStates.js'
+import { makeMachineWithStates } from '../helpers/makeMachineWithStates.js'
 
 describe('StateMachine', () => {
   describe('findPathTo', () => {
     it('finds the shortest chain of events from the state the machine is in', () => {
-      const order = machineWithStates('placed', 'paid', 'shipped', 'delivered')
+      const order = makeMachineWithStates('placed', 'paid', 'shipped', 'delivered')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
       order.defineTransition({ from: 'shipped', to: 'delivered', on: 'deliver' })
@@ -17,14 +17,14 @@ describe('StateMachine', () => {
     })
 
     it('gives an empty chain when the machine is already in the state', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       expect(order.findPathTo('placed')).toEqual([])
     })
 
     it('throws a NoPathError naming both states when no chain of events leads there', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.send('pay')
 
@@ -36,7 +36,7 @@ describe('StateMachine', () => {
 
     it('does not ask the guards', () => {
       const guard = vi.fn(() => false)
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard })
 
       const path = order.findPathTo('paid')
@@ -59,7 +59,7 @@ describe('StateMachine', () => {
     })
 
     it('throws an UnknownStateError for a state that was never defined', () => {
-      const order = machineWithStates('placed')
+      const order = makeMachineWithStates('placed')
 
       expect(() => order.findPathTo('shipped')).toThrow(UnknownStateError)
       expect(() => order.findPathTo('shipped')).toThrow(expect.objectContaining({ stateName: 'shipped' }))
@@ -75,7 +75,7 @@ describe('StateMachine', () => {
     })
 
     it('throws a TypeError when the state name is not a non-empty string', () => {
-      const order = machineWithStates('placed')
+      const order = makeMachineWithStates('placed')
 
       for (const invalidName of invalidNames) {
         expect(() => order.findPathTo(invalidName)).toThrow(TypeError)
@@ -83,7 +83,7 @@ describe('StateMachine', () => {
     })
 
     it('cannot be changed through the path it returns', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       order.findPathTo('paid').push('forge')

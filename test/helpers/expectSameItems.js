@@ -2,8 +2,8 @@ import { expect } from 'vitest'
 
 /**
  * Checks that the array holds exactly these objects, in this order. toEqual is not
- * enough: it accepts a copy with the same contents, and it treats all Transitions as
- * equal, since it ignores private fields.
+ * enough here. It accepts a copy with the same contents, and it sees all Transitions as
+ * equal, because their fields are private.
  *
  * @param {object[]} actual - The array to check.
  * @param {object[]} expected - The objects it should hold.

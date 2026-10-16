@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { StateMachine } from '../../src/StateMachine.js'
 import { UnknownStateError } from '../../src/errors.js'
 import { invalidFunctions, invalidNames, validPayMove } from '../helpers/fixtures.js'
-import { machineWithStates } from '../helpers/machineWithStates.js'
+import { makeMachineWithStates } from '../helpers/makeMachineWithStates.js'
 
 describe('StateMachine', () => {
   describe('defineTransition', () => {
     it('hands back the machine so transitions can be chained', () => {
-      const order = machineWithStates('placed', 'paid', 'shipped')
+      const order = makeMachineWithStates('placed', 'paid', 'shipped')
 
       order
         .defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
@@ -17,7 +17,7 @@ describe('StateMachine', () => {
     })
 
     it('accepts a transition with a guard', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       order.defineTransition({
         from: 'placed',
@@ -30,7 +30,7 @@ describe('StateMachine', () => {
     })
 
     it('accepts a transition that starts and ends in the same state', () => {
-      const order = machineWithStates('placed')
+      const order = makeMachineWithStates('placed')
 
       order.defineTransition({ from: 'placed', to: 'placed', on: 'edit' })
 
@@ -38,7 +38,7 @@ describe('StateMachine', () => {
     })
 
     it.each(['from', 'to', 'on'])('throws a TypeError when %s is not a non-empty string', (field) => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       for (const invalidName of invalidNames) {
         expect(() => order.defineTransition({ ...validPayMove, [field]: invalidName })).toThrow(TypeError)
@@ -46,7 +46,7 @@ describe('StateMachine', () => {
     })
 
     it('throws a TypeError when the guard is not a function', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       for (const invalidGuard of invalidFunctions) {
         expect(() => order.defineTransition({ ...validPayMove, guard: invalidGuard })).toThrow(TypeError)
@@ -60,31 +60,31 @@ describe('StateMachine', () => {
     })
 
     it('refuses a transition from a state that was never defined', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       expect(() => order.defineTransition({ from: 'packed', to: 'paid', on: 'pay' })).toThrow(UnknownStateError)
     })
 
     it('refuses a transition to a state that was never defined', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' })).toThrow(UnknownStateError)
     })
 
     it('names the state that was never defined in the error', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' })).toThrow(/shipped/)
     })
 
     it('checks the field types before it checks that the states exist', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       expect(() => order.defineTransition({ from: 42, to: 'shipped', on: 'ship' })).toThrow(TypeError)
     })
 
     it('does not register a transition it refuses', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' })).toThrow(UnknownStateError)
 
@@ -95,13 +95,13 @@ describe('StateMachine', () => {
   // eventNamesFrom is the deprecated name. Both names must behave exactly the same.
   describe.each(['listEventNamesFrom', 'eventNamesFrom'])('%s', (methodName) => {
     it('sees no way out of a state before any transition is defined', () => {
-      const order = machineWithStates('placed')
+      const order = makeMachineWithStates('placed')
 
       expect(order[methodName]('placed')).toEqual([])
     })
 
     it('lists the events that lead out of a state, in definition order', () => {
-      const order = machineWithStates('placed', 'paid', 'void')
+      const order = makeMachineWithStates('placed', 'paid', 'void')
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'placed', to: 'void', on: 'cancel' })
@@ -110,7 +110,7 @@ describe('StateMachine', () => {
     })
 
     it('lists an event once even when several transitions share it', () => {
-      const order = machineWithStates('placed', 'paid', 'rejected')
+      const order = makeMachineWithStates('placed', 'paid', 'rejected')
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay' })
@@ -119,7 +119,7 @@ describe('StateMachine', () => {
     })
 
     it('keeps a shared event where it was first defined', () => {
-      const order = machineWithStates('placed', 'paid', 'void', 'rejected')
+      const order = makeMachineWithStates('placed', 'paid', 'void', 'rejected')
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'placed', to: 'void', on: 'cancel' })
@@ -129,7 +129,7 @@ describe('StateMachine', () => {
     })
 
     it('lists only events that leave the state it was asked about', () => {
-      const order = machineWithStates('placed', 'paid', 'shipped')
+      const order = makeMachineWithStates('placed', 'paid', 'shipped')
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
@@ -138,7 +138,7 @@ describe('StateMachine', () => {
     })
 
     it('sees no way out of a state that no transition leaves', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
@@ -146,7 +146,7 @@ describe('StateMachine', () => {
     })
 
     it('throws an UnknownStateError for a state that was never defined', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
@@ -155,7 +155,7 @@ describe('StateMachine', () => {
     })
 
     it('throws a TypeError when the state name is not a non-empty string', () => {
-      const order = machineWithStates('placed')
+      const order = makeMachineWithStates('placed')
 
       for (const invalidName of invalidNames) {
         expect(() => order[methodName](invalidName)).toThrow(TypeError)
@@ -163,7 +163,7 @@ describe('StateMachine', () => {
     })
 
     it('lists a guarded event even though the guard refuses the move', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
 
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
 
@@ -171,7 +171,7 @@ describe('StateMachine', () => {
     })
 
     it('cannot be changed through the list of events it returns', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       order[methodName]('placed').push('forge')

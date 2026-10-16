@@ -5,8 +5,8 @@
 export const invalidNames = [undefined, null, '', '   ', 42, {}, ['placed']]
 
 /**
- * Values that must be refused where a hook or a guard is expected. undefined is left
- * out, since it means that no function was given, which is allowed.
+ * Values that must be refused as a hook or a guard. undefined is not one of them,
+ * because hooks and guards are optional.
  */
 export const invalidFunctions = ['not-a-function', 42, {}, null, true]
 

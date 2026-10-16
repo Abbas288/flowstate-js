@@ -67,8 +67,8 @@ export class OrderFlow {
   /**
    * The guard on pay. It allows the move only when there is an amount to pay.
    *
-   * @param {object} context - The machine's shared context.
+   * @param {object} ctx - The machine's shared context.
    * @returns {boolean} True if the amount is above 0.
    */
-  #hasAmountToPay = (context) => context.amount > 0
+  #hasAmountToPay = (ctx) => ctx.amount > 0
 }

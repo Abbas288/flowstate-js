@@ -3,12 +3,12 @@ import { StateMachine } from '../../src/StateMachine.js'
 import { BlockedTransitionError, NoTransitionError, UnknownStateError } from '../../src/errors.js'
 import { expectSameItems } from '../helpers/expectSameItems.js'
 import { invalidNames } from '../helpers/fixtures.js'
-import { machineWithStates } from '../helpers/machineWithStates.js'
+import { makeMachineWithStates } from '../helpers/makeMachineWithStates.js'
 
 describe('StateMachine', () => {
   describe('send', () => {
     it('moves along the transition the event triggers', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       order.send('pay')
@@ -17,14 +17,14 @@ describe('StateMachine', () => {
     })
 
     it('returns nothing, so that moving and asking stay separate', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       expect(order.send('pay')).toBeUndefined()
     })
 
     it('follows several events in a row', () => {
-      const order = machineWithStates('placed', 'paid', 'shipped')
+      const order = makeMachineWithStates('placed', 'paid', 'shipped')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
 
@@ -36,7 +36,7 @@ describe('StateMachine', () => {
     })
 
     it('picks the transition that leaves its current state', () => {
-      const order = machineWithStates('placed', 'paid', 'shipped')
+      const order = makeMachineWithStates('placed', 'paid', 'shipped')
       // Current state is 'placed', so the first transition is the one that matters
       order.defineTransition({ from: 'placed', to: 'paid', on: 'go' })
       order.defineTransition({ from: 'paid', to: 'shipped', on: 'go' })
@@ -47,7 +47,7 @@ describe('StateMachine', () => {
     })
 
     it('can take a transition that starts and ends in the same state', () => {
-      const order = machineWithStates('placed')
+      const order = makeMachineWithStates('placed')
       order.defineTransition({ from: 'placed', to: 'placed', on: 'edit' })
 
       order.send('edit')
@@ -56,14 +56,14 @@ describe('StateMachine', () => {
     })
 
     it('refuses an event that has no transition from the current state', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       expect(() => order.send('ship')).toThrow(NoTransitionError)
     })
 
     it('names both the state and the event in the error it throws', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       expect(() => order.send('ship')).toThrow(/placed/)
@@ -71,7 +71,7 @@ describe('StateMachine', () => {
     })
 
     it('stays in the state it was in when it refuses the event', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       expect(() => order.send('ship')).toThrow(NoTransitionError)
@@ -82,14 +82,14 @@ describe('StateMachine', () => {
     it('refuses an event whose transition leaves a state it is not in', () => {
       const currentStateName = 'placed'
       const otherStateName = 'paid'
-      const order = machineWithStates(currentStateName, otherStateName, 'shipped')
+      const order = makeMachineWithStates(currentStateName, otherStateName, 'shipped')
       order.defineTransition({ from: otherStateName, to: 'shipped', on: 'ship' })
 
       expect(() => order.send('ship')).toThrow(NoTransitionError)
     })
 
     it('throws a TypeError when the event name is not a non-empty string', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
 
       for (const invalidName of invalidNames) {
@@ -107,7 +107,7 @@ describe('StateMachine', () => {
     })
 
     it('moves when the guard allows the transition', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => true })
 
       order.send('pay')
@@ -116,14 +116,14 @@ describe('StateMachine', () => {
     })
 
     it('refuses the event when the guard blocks the transition', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
 
       expect(() => order.send('pay')).toThrow(BlockedTransitionError)
     })
 
     it('stays in the state it was in when the guard blocks the transition', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
 
       expect(() => order.send('pay')).toThrow(BlockedTransitionError)
@@ -143,7 +143,7 @@ describe('StateMachine', () => {
 
     it('passes its own context object to the guard', () => {
       const guard = vi.fn(() => true)
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard })
 
       order.send('pay')
@@ -153,7 +153,7 @@ describe('StateMachine', () => {
     })
 
     it('moves on a later send once the guard allows it', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({
         from: 'placed',
         to: 'paid',
@@ -191,7 +191,7 @@ describe('StateMachine', () => {
     })
 
     it('stays in the state it was in when the guard throws an error', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({
         from: 'placed',
         to: 'paid',
@@ -206,7 +206,7 @@ describe('StateMachine', () => {
     })
 
     it('takes the first transition on the event whose guard allows it', () => {
-      const order = machineWithStates('placed', 'paid', 'rejected')
+      const order = makeMachineWithStates('placed', 'paid', 'rejected')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => true })
 
@@ -216,7 +216,7 @@ describe('StateMachine', () => {
     })
 
     it('takes the earlier of two transitions whose guards both allow it', () => {
-      const order = machineWithStates('placed', 'paid', 'rejected')
+      const order = makeMachineWithStates('placed', 'paid', 'rejected')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => true })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => true })
 
@@ -227,7 +227,7 @@ describe('StateMachine', () => {
 
     it('does not ask a later guard once an earlier one allows the move', () => {
       const laterGuard = vi.fn(() => true)
-      const order = machineWithStates('placed', 'paid', 'rejected')
+      const order = makeMachineWithStates('placed', 'paid', 'rejected')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => true })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: laterGuard })
 
@@ -237,7 +237,7 @@ describe('StateMachine', () => {
     })
 
     it('reports the first transition when every guard on the event blocks its transition', () => {
-      const order = machineWithStates('placed', 'paid', 'rejected')
+      const order = makeMachineWithStates('placed', 'paid', 'rejected')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: () => false })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: () => false })
 
@@ -247,7 +247,7 @@ describe('StateMachine', () => {
     it('asks each guard once when every guard on the event blocks its transition', () => {
       const earlierGuard = vi.fn(() => false)
       const laterGuard = vi.fn(() => false)
-      const order = machineWithStates('placed', 'paid', 'rejected')
+      const order = makeMachineWithStates('placed', 'paid', 'rejected')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: earlierGuard })
       order.defineTransition({ from: 'placed', to: 'rejected', on: 'pay', guard: laterGuard })
 

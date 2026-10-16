@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import { StateMachine } from '../../src/StateMachine.js'
-import { machineWithStates } from '../helpers/machineWithStates.js'
-import { recordedMoves } from '../helpers/recordedMoves.js'
+import { makeMachineWithStates } from '../helpers/makeMachineWithStates.js'
+import { convertToPlainMoves } from '../helpers/convertToPlainMoves.js'
 
 describe('StateMachine', () => {
   describe('undoLastMove', () => {
     it('moves back to the state it left on its last move', () => {
-      const order = machineWithStates('placed', 'paid', 'shipped')
+      const order = makeMachineWithStates('placed', 'paid', 'shipped')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
       order.send('pay')
@@ -18,7 +18,7 @@ describe('StateMachine', () => {
     })
 
     it('removes the undone move from the history', () => {
-      const order = machineWithStates('placed', 'paid', 'shipped')
+      const order = makeMachineWithStates('placed', 'paid', 'shipped')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
       order.send('pay')
@@ -26,11 +26,11 @@ describe('StateMachine', () => {
 
       order.undoLastMove()
 
-      expect(recordedMoves(order)).toEqual([{ from: 'placed', to: 'paid', on: 'pay' }])
+      expect(convertToPlainMoves(order.history)).toEqual([{ from: 'placed', to: 'paid', on: 'pay' }])
     })
 
     it('undoes one move per call, back to the starting state', () => {
-      const order = machineWithStates('placed', 'paid', 'shipped')
+      const order = makeMachineWithStates('placed', 'paid', 'shipped')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
       order.send('pay')
@@ -58,7 +58,7 @@ describe('StateMachine', () => {
     })
 
     it('returns nothing, whether or not there was a move to undo', () => {
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
       order.send('pay')
 
@@ -71,7 +71,7 @@ describe('StateMachine', () => {
 
     it('moves back without asking the guard', () => {
       const guard = vi.fn(() => true)
-      const order = machineWithStates('placed', 'paid')
+      const order = makeMachineWithStates('placed', 'paid')
       order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard })
       order.send('pay')
       guard.mockClear()
@@ -123,7 +123,7 @@ describe('StateMachine', () => {
 
       expect(() => order.undoLastMove()).toThrow('exit failed')
       expect(order.currentStateName).toBe('paid')
-      expect(recordedMoves(order)).toEqual([{ from: 'placed', to: 'paid', on: 'pay' }])
+      expect(convertToPlainMoves(order.history)).toEqual([{ from: 'placed', to: 'paid', on: 'pay' }])
     })
 
     it('has already moved back and removed the move when the enter hook throws an error', () => {
