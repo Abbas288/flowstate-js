@@ -13,7 +13,7 @@ describe('StateMachine', () => {
         .defineTransition({ from: 'placed', to: 'paid', on: 'pay' })
         .defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
 
-      expect(order.eventNamesFrom('paid')).toEqual(['ship'])
+      expect(order.listEventNamesFrom('paid')).toEqual(['ship'])
     })
 
     it('accepts a transition with a guard', () => {
@@ -26,7 +26,7 @@ describe('StateMachine', () => {
         guard: (ctx) => ctx.amount > 0,
       })
 
-      expect(order.eventNamesFrom('placed')).toEqual(['pay'])
+      expect(order.listEventNamesFrom('placed')).toEqual(['pay'])
     })
 
     it('accepts a transition that starts and ends in the same state', () => {
@@ -34,7 +34,7 @@ describe('StateMachine', () => {
 
       order.defineTransition({ from: 'placed', to: 'placed', on: 'edit' })
 
-      expect(order.eventNamesFrom('placed')).toEqual(['edit'])
+      expect(order.listEventNamesFrom('placed')).toEqual(['edit'])
     })
 
     it.each(['from', 'to', 'on'])('throws a TypeError when %s is not a non-empty string', (field) => {
@@ -88,7 +88,7 @@ describe('StateMachine', () => {
 
       expect(() => order.defineTransition({ from: 'placed', to: 'shipped', on: 'ship' })).toThrow(UnknownStateError)
 
-      expect(order.eventNamesFrom('placed')).toEqual([])
+      expect(order.listEventNamesFrom('placed')).toEqual([])
     })
   })
 
