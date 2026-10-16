@@ -58,8 +58,7 @@ class StateNameError extends FlowStateError {
 }
 
 /**
- * Thrown when a transition, the starting state or eventNamesFrom names a state that was
- * never defined.
+ * Thrown when a name refers to a state that was never defined.
  */
 class UnknownStateError extends StateNameError {
   /**
@@ -180,6 +179,46 @@ class BlockedTransitionError extends RefusedEventError {
   }
 }
 
+/**
+ * Thrown when no chain of events leads from the current state to the state asked for. Guards are
+ * not part of the search.
+ */
+class NoPathError extends FlowStateError {
+  #fromStateName
+  #toStateName
+
+  /**
+   * Creates the error for two states that no chain of events connects.
+   *
+   * @param {string} fromStateName - Name of the state the search started in.
+   * @param {string} toStateName - Name of the state that could not be reached.
+   */
+  constructor(fromStateName, toStateName) {
+    super(`No path from state "${fromStateName}" to state "${toStateName}".`)
+
+    this.#fromStateName = fromStateName
+    this.#toStateName = toStateName
+  }
+
+  /**
+   * Gets the name of the state the search started in.
+   *
+   * @returns {string} Name of the state the search started in.
+   */
+  get fromStateName() {
+    return this.#fromStateName
+  }
+
+  /**
+   * Gets the name of the state that could not be reached.
+   *
+   * @returns {string} Name of the state that could not be reached.
+   */
+  get toStateName() {
+    return this.#toStateName
+  }
+}
+
 /*
  * The error types a caller can catch: FlowStateError for every error the machine
  * throws, or one concrete kind for a single case. StateNameError and RefusedEventError
@@ -192,4 +231,5 @@ export {
   DuplicateStateError,
   NoTransitionError,
   BlockedTransitionError,
+  NoPathError,
 }

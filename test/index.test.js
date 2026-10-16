@@ -7,6 +7,7 @@ describe('flowstate-js', () => {
       'BlockedTransitionError',
       'DuplicateStateError',
       'FlowStateError',
+      'NoPathError',
       'NoTransitionError',
       'StateMachine',
       'UnknownStateError',

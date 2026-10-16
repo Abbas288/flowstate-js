@@ -1,4 +1,5 @@
 import { HistoryEntry } from './HistoryEntry.js'
+import { PathSearch } from './PathSearch.js'
 import { State } from './State.js'
 import { StateRegistry } from './StateRegistry.js'
 import { Transition } from './Transition.js'
@@ -6,6 +7,10 @@ import { TransitionHistory } from './TransitionHistory.js'
 import { TransitionRegistry } from './TransitionRegistry.js'
 import { BlockedTransitionError, DuplicateStateError, NoTransitionError, UnknownStateError } from './errors.js'
 import { EventName, StateName } from './names.js'
+
+/**
+ * @typedef {import('./errors.js').NoPathError} NoPathError
+ */
 
 /**
  * A finite state machine. It is in one state at a time and moves to another state
@@ -192,6 +197,40 @@ export class StateMachine {
   }
 
   /**
+   * Tells whether a chain of events leads from the current state to the state. Guards are not
+   * asked.
+   *
+   * @param {string} stateName - Name of the state to reach.
+   * @returns {boolean} True if findPathTo would find a chain, false if it would throw a NoPathError.
+   * @throws {UnknownStateError} If that state, or the state the machine is in, has not been defined.
+   */
+  canReach(stateName) {
+    this.#requireReadyToSearch(stateName)
+
+    const searchFromCurrentState = new PathSearch(this.#transitions, this.#currentStateName)
+
+    return searchFromCurrentState.reaches(stateName)
+  }
+
+  /**
+   * Finds the shortest chain of events from the current state to the state. Nothing is sent and
+   * guards are not asked. Ties go to the transitions defined first.
+   *
+   * @param {string} stateName - Name of the state to reach.
+   * @returns {string[]} The event names in sending order, in a new array each time. Empty if the
+   *   machine is already in that state.
+   * @throws {UnknownStateError} If that state, or the state the machine is in, has not been defined.
+   * @throws {NoPathError} If no chain of events leads there.
+   */
+  findPathTo(stateName) {
+    this.#requireReadyToSearch(stateName)
+
+    const searchFromCurrentState = new PathSearch(this.#transitions, this.#currentStateName)
+
+    return searchFromCurrentState.pathTo(stateName)
+  }
+
+  /**
    * Checks both ends of the transition.
    *
    * @param {Transition} transition - The transition.
@@ -199,6 +238,26 @@ export class StateMachine {
   #requireBothStatesDefined(transition) {
     this.#requireDefinedState(transition.fromStateName)
     this.#requireDefinedState(transition.toStateName)
+  }
+
+  /**
+   * Creating an EventName is what checks the event name, so the object is not kept.
+   *
+   * @param {*} eventName - The value to check.
+   */
+  #requireReadyToSend(eventName) {
+    new EventName(eventName)
+    this.#requireDefinedState(this.#currentStateName)
+  }
+
+  /**
+   * Checks the target and the current state.
+   *
+   * @param {*} stateName - The value to check.
+   */
+  #requireReadyToSearch(stateName) {
+    this.#requireDefinedState(new StateName(stateName).text)
+    this.#requireDefinedState(this.#currentStateName)
   }
 
   /**
@@ -210,16 +269,6 @@ export class StateMachine {
     if (!this.#states.has(stateName)) {
       throw new UnknownStateError(stateName)
     }
-  }
-
-  /**
-   * Creating an EventName is what checks the event name, so the object is not kept.
-   *
-   * @param {*} eventName - The value to check.
-   */
-  #requireReadyToSend(eventName) {
-    new EventName(eventName)
-    this.#requireDefinedState(this.#currentStateName)
   }
 
   /**

@@ -4,6 +4,7 @@ import {
   BlockedTransitionError,
   DuplicateStateError,
   FlowStateError,
+  NoPathError,
   NoTransitionError,
   UnknownStateError,
 } from '../src/errors.js'
@@ -167,12 +168,53 @@ describe('BlockedTransitionError', () => {
   })
 })
 
+describe('NoPathError', () => {
+  it('can be caught as a FlowStateError', () => {
+    expect(new NoPathError('paid', 'placed')).toBeInstanceOf(FlowStateError)
+  })
+
+  it('is named after its own class', () => {
+    expect(new NoPathError('paid', 'placed').name).toBe('NoPathError')
+  })
+
+  it('names both states in its message', () => {
+    const error = new NoPathError('paid', 'placed')
+
+    expect(error.message).toContain('paid')
+    expect(error.message).toContain('placed')
+  })
+
+  it('hands out both state names without parsing the message, in the right order', () => {
+    const error = new NoPathError('paid', 'placed')
+
+    expect(error.fromStateName).toBe('paid')
+    expect(error.toStateName).toBe('placed')
+  })
+
+  it('does not let the state names be written from outside', () => {
+    const error = new NoPathError('paid', 'placed')
+
+    expect(() => {
+      error.fromStateName = 'shipped'
+    }).toThrow(TypeError)
+    expect(() => {
+      error.toStateName = 'shipped'
+    }).toThrow(TypeError)
+  })
+
+  it('is not one of the errors about a refused event', () => {
+    expect(new NoPathError('paid', 'placed')).not.toBeInstanceOf(NoTransitionError)
+    expect(new NoPathError('paid', 'placed').eventName).toBeUndefined()
+  })
+})
+
 describe('the error family', () => {
   it('exports the error types a caller can catch, and nothing else', () => {
     expect(Object.keys(errorModule).sort()).toEqual([
       'BlockedTransitionError',
       'DuplicateStateError',
       'FlowStateError',
+      'NoPathError',
       'NoTransitionError',
       'UnknownStateError',
     ])
@@ -185,6 +227,7 @@ describe('the error family', () => {
       new DuplicateStateError('paid'),
       new NoTransitionError('placed', 'ship'),
       new BlockedTransitionError(payment),
+      new NoPathError('paid', 'placed'),
     ]
 
     for (const error of thrown) {

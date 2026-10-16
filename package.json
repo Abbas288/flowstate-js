@@ -1,7 +1,7 @@
 {
   "name": "flowstate-js",
   "version": "0.1.0",
-  "description": "A dependency-free finite state machine for JavaScript with guards, hooks, a history of moves and undo.",
+  "description": "A dependency-free finite state machine for JavaScript with guards, hooks, undo and shortest-path search.",
   "type": "module",
   "main": "./src/index.js",
   "exports": "./src/index.js",

@@ -1,6 +1,6 @@
 # flowstate-js
 
-A small finite state machine for JavaScript, with guards, hooks, a history of moves and undo. No
+A small finite state machine for JavaScript, with guards, hooks, undo and shortest-path search. No
 dependencies.
 
 ## What it does
@@ -16,6 +16,7 @@ With `flowstate-js` you can:
 - Send an event to move the machine, or first ask whether the event would move it.
 - List the events that lead out of a state.
 - Read the moves the machine has made, and undo the last one.
+- Find the shortest chain of events to a state, or ask whether one exists.
 - Tell from the error type why an event was refused: no transition exists, or a guard
   blocked it.
 
@@ -50,7 +51,7 @@ for you: the old address `github:Abbas288/flowstate-mini-js` leads here, and you
 Your project must use ES modules: set `"type": "module"` in your `package.json`, or name
 your files `.mjs`.
 
-Import everything from the package name. It exports `StateMachine` and five error classes.
+Import everything from the package name. It exports `StateMachine` and six error classes.
 The other files in `src/` are internal, and Node.js refuses to load them from outside
 (`ERR_PACKAGE_PATH_NOT_EXPORTED`).
 
@@ -208,6 +209,32 @@ Throws `UnknownStateError` if `stateName` is not a defined state.
 `machine.eventNamesFrom(stateName)` does exactly the same and still works, but it is
 deprecated. Use `listEventNamesFrom`: the old name has no verb, so it does not say what it does.
 
+### Find a path to a state
+
+```js
+machine.findPathTo(stateName)
+machine.canReach(stateName)
+```
+
+`findPathTo` returns the shortest chain of events that leads from the current state to
+`stateName`, in the order to send them, such as `['pay', 'ship']`. If the machine is already in
+`stateName`, it returns `[]`. If two chains are equally short, the one that uses the transitions
+defined first wins. Nothing is sent, and no hook runs.
+
+`canReach` returns `true` if `findPathTo` would find a chain, and `false` if it would not. Ask it
+first if you do not want to catch an error.
+
+The guards are not asked, since they depend on the context at the time of each move. A chain that
+is found is possible by the structure of the machine, but sending its events can still throw
+`BlockedTransitionError`.
+
+How the search works inside, with a diagram and an example: [ARCHITECTURE.md](ARCHITECTURE.md#path-search).
+
+Throws:
+
+- `UnknownStateError` if `stateName`, or the initial state, is not a defined state.
+- `NoPathError`, from `findPathTo` only, if no chain of events leads to `stateName`.
+
 ### Undo the last move
 
 ```js
@@ -347,12 +374,13 @@ Each error the machine throws for a broken rule extends `FlowStateError`. Catch
 `FlowStateError` to handle all of them, or catch one class for a single case. `error.name`
 is the class name, such as `'NoTransitionError'`.
 
-| Error                    | Thrown when                                                                                                                                                                                                                                                                                                                  | Properties                                  |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `UnknownStateError`      | [`defineTransition`](#define-a-transition) gets a `from` or `to` that is not a defined state.<br>[`listEventNamesFrom`](#list-the-events-out-of-a-state) gets a state name that is not defined.<br>[`send`](#send-an-event) or [`canSend`](#check-an-event-before-sending-it) is called before the initial state is defined. | `stateName`                                 |
-| `DuplicateStateError`    | [`defineState`](#define-a-state) gets a name that is already defined.                                                                                                                                                                                                                                                        | `stateName`                                 |
-| `NoTransitionError`      | [`send`](#send-an-event) gets an event with no transition out of the current state.                                                                                                                                                                                                                                          | `fromStateName`, `eventName`                |
-| `BlockedTransitionError` | [`send`](#send-an-event) gets an event whose transitions all have guards that refuse the move.                                                                                                                                                                                                                               | `fromStateName`, `eventName`, `toStateName` |
+| Error                    | Thrown when                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Properties                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `UnknownStateError`      | [`defineTransition`](#define-a-transition) gets a `from` or `to` that is not a defined state.<br>[`listEventNamesFrom`](#list-the-events-out-of-a-state), [`findPathTo`](#find-a-path-to-a-state) or [`canReach`](#find-a-path-to-a-state) gets a state name that is not defined.<br>[`send`](#send-an-event), [`canSend`](#check-an-event-before-sending-it), [`findPathTo`](#find-a-path-to-a-state) or [`canReach`](#find-a-path-to-a-state) is called before the initial state is defined. | `stateName`                                 |
+| `DuplicateStateError`    | [`defineState`](#define-a-state) gets a name that is already defined.                                                                                                                                                                                                                                                                                                                                                                                                                          | `stateName`                                 |
+| `NoTransitionError`      | [`send`](#send-an-event) gets an event with no transition out of the current state.                                                                                                                                                                                                                                                                                                                                                                                                            | `fromStateName`, `eventName`                |
+| `BlockedTransitionError` | [`send`](#send-an-event) gets an event whose transitions all have guards that refuse the move.                                                                                                                                                                                                                                                                                                                                                                                                 | `fromStateName`, `eventName`, `toStateName` |
+| `NoPathError`            | [`findPathTo`](#find-a-path-to-a-state) finds no chain of events from the current state to the state.                                                                                                                                                                                                                                                                                                                                                                                          | `fromStateName`, `toStateName`              |
 
 `BlockedTransitionError` has one `toStateName`. When several transitions leave the current state
 on the event and all are refused, it is the `to` of the one defined first. In the example under
@@ -392,6 +420,8 @@ src/       The module. src/index.js is the entry point, the other files are inte
 test/      Unit tests (Vitest). The StateMachine tests are split into several files in test/StateMachine/.
 test-app/  A console app for trying the module by hand. It imports the module by its package name, like a user would.
 ```
+
+Diagrams of how the module works inside are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Development
 
