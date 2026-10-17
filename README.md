@@ -32,7 +32,7 @@ therefore caught when you define the transition, not later when you send an even
 
 ## Requirements
 
-- Node.js 18 or later. Developed and tested on Node.js 22.
+- Node.js 18 or later. Tested on Node.js 18, 20, 22 and 24.
 - ES modules. Load the package with `import`, not `require`.
 - No runtime dependencies.
 
@@ -64,11 +64,11 @@ const order = new StateMachine('placed')
 
 order
   .defineState('placed')
-  .defineState('paid', { onEnter: (context) => console.log(`Paid ${context.amount} kr`) })
+  .defineState('paid', { onEnter: (ctx) => console.log(`Paid ${ctx.amount} kr`) })
   .defineState('shipped', { onEnter: () => console.log('On its way') })
 
 order
-  .defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: (context) => context.amount > 0 })
+  .defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: (ctx) => ctx.amount > 0 })
   .defineTransition({ from: 'paid', to: 'shipped', on: 'ship' })
 
 console.log(order.canSend('pay')) // false, since context.amount is not set yet
@@ -102,7 +102,7 @@ console.log(order.currentStateName) // shipped
 - Each state name can be defined only once.
 - A state must be defined before a transition can use it.
 - The initial state may be defined after the machine is created, but it must be defined
-  before the first call to `send` or `canSend`.
+  before the first call to `send`, `canSend`, `canReach` or `findPathTo`.
 
 ## API
 
@@ -278,8 +278,8 @@ All four are read-only. Assigning to them throws `TypeError`.
    guard refused, it throws `BlockedTransitionError`. In both cases the machine stays where
    it was and no hook runs.
 5. <a id="step-5"></a>It runs `onExit` of the current state, then changes the current
-   state and records the move in the history, then runs `onEnter` of the new state. A transition from a state to itself runs
-   both hooks too.
+   state and records the move in the history, then runs `onEnter` of the new state. A
+   transition from a state to itself runs both hooks too.
 
 ### Example
 
@@ -300,8 +300,8 @@ order
     from: 'placed',
     to: 'rejected',
     on: 'pay',
-    guard: (context) => {
-      const allowed = context.amount <= 0
+    guard: (ctx) => {
+      const allowed = ctx.amount <= 0
       console.log(`guard to rejected: ${allowed}`)
       return allowed
     },
@@ -310,8 +310,8 @@ order
     from: 'placed',
     to: 'paid',
     on: 'pay',
-    guard: (context) => {
-      const allowed = context.amount > 0
+    guard: (ctx) => {
+      const allowed = ctx.amount > 0
       console.log(`guard to paid: ${allowed}`)
       return allowed
     },
@@ -359,7 +359,7 @@ const order = new StateMachine('placed')
 order.defineState('placed').defineState('paid').defineState('rejected')
 
 order
-  .defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: (context) => context.amount > 0 })
+  .defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: (ctx) => ctx.amount > 0 })
   .defineTransition({ from: 'placed', to: 'rejected', on: 'pay' })
 
 order.context.amount = 0
@@ -398,7 +398,7 @@ import { StateMachine, BlockedTransitionError, NoTransitionError } from 'flowsta
 const order = new StateMachine('placed')
 
 order.defineState('placed').defineState('paid')
-order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: (context) => context.amount > 0 })
+order.defineTransition({ from: 'placed', to: 'paid', on: 'pay', guard: (ctx) => ctx.amount > 0 })
 
 try {
   order.send('pay')
@@ -445,6 +445,17 @@ npm test
 | `npm run format`        | Formats all files with Prettier                                                                           |
 | `npm run lint:fix`      | Formats all files with Prettier, then fixes what ESLint can in the JavaScript files and lists the rest    |
 
+The test results are in [TEST_REPORT.md](TEST_REPORT.md).
+
+### Continuous integration (CI)
+
+GitHub Actions runs the checks on every push to `main` and on every pull request:
+
+- Node.js 22 and 24: formatting, lint and the unit tests.
+- Node.js 18 and 20: the unit tests, with Vitest 2.
+
+### Test-App
+
 To try the module by hand, start the Test-App. It installs the module from the folder above, so
 it runs the code in `src/`:
 
@@ -471,8 +482,6 @@ paid [ship, cancel]>
 ```
 
 How to read the screen, every command, and a tour that tries every function: [test-app/README.md](test-app/README.md).
-
-The test results are in [TEST_REPORT.md](TEST_REPORT.md).
 
 ## Contributing
 
