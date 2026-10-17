@@ -419,11 +419,14 @@ try {
 src/       The module. src/index.js is the entry point, the other files are internal.
 test/      Unit tests (Vitest). The StateMachine tests are split into several files in test/StateMachine/.
 test-app/  A console app for trying the module by hand. It imports the module by its package name, like a user would.
+           Its code is in test-app/src/.
 ```
 
 Diagrams of how the module works inside are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Development
+
+The module runs on Node.js 18 or later, but the development tools do not: Vitest 5 needs Node.js 22.12 or later.
 
 ```bash
 git clone https://github.com/Abbas288/flowstate-js.git
@@ -451,7 +454,23 @@ npm install
 npm start
 ```
 
-It runs an order flow in the terminal. Type `help` to see the commands.
+It moves an order through `placed`, `paid`, `shipped` and `delivered`, or to `cancelled`. Most commands call a
+method or property of `StateMachine` and print the call and the result:
+
+```text
+placed [pay, cancel]> context.amount = 250
+  order.context.amount = 250
+
+placed [pay, cancel]> send pay
+  order.send('pay')
+    [hook] onExit of placed
+    [hook] onEnter of paid
+  completed (no return value)
+
+paid [ship, cancel]>
+```
+
+How to read the screen, every command, and a tour that tries every function: [test-app/README.md](test-app/README.md).
 
 The test results are in [TEST_REPORT.md](TEST_REPORT.md).
 
