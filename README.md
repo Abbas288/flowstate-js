@@ -44,6 +44,12 @@ The package is not on npm. Install it from GitHub:
 npm install github:Abbas288/flowstate-js
 ```
 
+To get exactly this version, add its tag:
+
+```bash
+npm install github:Abbas288/flowstate-js#v0.2.0
+```
+
 The module used to be called `flowstate-mini-js`. If you installed it under that name, nothing changes
 for you: the old address `github:Abbas288/flowstate-mini-js` leads here, and your imports from
 `flowstate-mini-js` keep working.
@@ -491,7 +497,7 @@ Pull requests are welcome. Before you open one, add a test for your change and r
 
 ## Version
 
-The current version is 0.1.0 (see `package.json`). Until version 1.0.0, the API may still
+The current version is 0.2.0 (see `package.json`). Until version 1.0.0, the API may still
 change.
 
 ## License
