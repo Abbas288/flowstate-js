@@ -47,7 +47,7 @@ npm install github:Abbas288/flowstate-js
 To get exactly this version, add its tag:
 
 ```bash
-npm install github:Abbas288/flowstate-js#v0.2.0
+npm install github:Abbas288/flowstate-js#v1.0.0
 ```
 
 The module used to be called `flowstate-mini-js`. If you installed it under that name, nothing changes
@@ -60,6 +60,26 @@ your files `.mjs`.
 Import everything from the package name. It exports `StateMachine` and six error classes.
 The other files in `src/` are internal, and Node.js refuses to load them from outside
 (`ERR_PACKAGE_PATH_NOT_EXPORTED`).
+
+## v1 and v2
+
+The package has two versions of its interface. **v1** is the interface from `flowstate-mini-js`, as it was at the
+tag `laboration-2`. **v2** is v1 plus the methods added since. Both are in this package, and code written for v1
+keeps working without changes. v1 and v2 are names of the interfaces, not version numbers.
+
+| What                         | v1 (`laboration-2`)                                                                                         | v2 (now)                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Create a machine             | `new StateMachine(initialStateName)`                                                                        | the same                                                           |
+| Define states and moves      | `defineState`, `defineTransition`                                                                           | the same                                                           |
+| Send and check events        | `send`, `canSend`                                                                                           | the same                                                           |
+| Read the machine             | `currentStateName`, `context`, `stateNames`                                                                 | the same, plus `history`                                           |
+| List the events out of state | `eventNamesFrom`                                                                                            | `listEventNamesFrom` (the old name still works, but is deprecated) |
+| Undo                         | –                                                                                                           | `undoLastMove`                                                     |
+| Search for a path            | –                                                                                                           | `canReach`, `findPathTo`                                           |
+| Errors                       | `FlowStateError`, `UnknownStateError`, `DuplicateStateError`, `NoTransitionError`, `BlockedTransitionError` | the same, plus `NoPathError`                                       |
+
+[`test/integration/orderLifecycle.test.js`](test/integration/orderLifecycle.test.js) runs one order with only the v1
+names and one with the v2 additions.
 
 ## Quick start
 
@@ -497,8 +517,9 @@ Pull requests are welcome. Before you open one, add a test for your change and r
 
 ## Version
 
-The current version is 0.2.0 (see `package.json`). Until version 1.0.0, the API may still
-change.
+The current version is 1.0.0 (see `package.json`). The version follows
+[semantic versioning](https://semver.org/): a change that breaks code written for v1 or v2 would need version 2.0.0,
+and a new method needs 1.1.0.
 
 ## License
 

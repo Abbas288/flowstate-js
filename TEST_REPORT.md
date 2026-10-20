@@ -11,7 +11,7 @@ The module is tested in two ways:
    the internal classes on their own. Each test checks one behaviour, and its name says which. Together they cover
    100% of the statements, branches, functions and lines in `src/`. One integration test,
    [`test/integration/orderLifecycle.test.js`](test/integration/orderLifecycle.test.js), runs an order through the
-   public interface: first with only the names from laboration 2 (v1), then with the additions (v2).
+   public interface: first with only the v1 names, then with the v2 additions.
 2. **The Test-App** in [`test-app/`](test-app/), a console app that moves an order through the module. It is tested
    by hand: the [manual tests](#manual-tests-test-app) are the tour in [`test-app/README.md`](test-app/README.md).
 
