@@ -6,10 +6,12 @@ This report describes how flowstate-js was tested and what the results were.
 
 The module is tested in two ways:
 
-1. **Automated unit tests** with [Vitest](https://vitest.dev/): 291 tests in 19 files in [`test/`](test/). They
+1. **Automated tests** with [Vitest](https://vitest.dev/): 293 tests in 20 files in [`test/`](test/). The unit tests
    cover every public method and property of `StateMachine`, the error classes, the exports of `src/index.js`, and
    the internal classes on their own. Each test checks one behaviour, and its name says which. Together they cover
-   100% of the statements, branches, functions and lines in `src/`.
+   100% of the statements, branches, functions and lines in `src/`. One integration test,
+   [`test/integration/orderLifecycle.test.js`](test/integration/orderLifecycle.test.js), runs an order through the
+   public interface: first with only the names from laboration 2 (v1), then with the additions (v2).
 2. **The Test-App** in [`test-app/`](test-app/), a console app that moves an order through the module. It is tested
    by hand: the [manual tests](#manual-tests-test-app) are the tour in [`test-app/README.md`](test-app/README.md).
 
@@ -69,7 +71,7 @@ In PowerShell, each string becomes one line:
 
 ### Unit tests
 
-**291 of 291 passed.** The coverage of `src/` is 100% for statements (182), branches (47), functions (83) and
+**293 of 293 passed.** The coverage of `src/` is 100% for statements (182), branches (47), functions (83) and
 lines (178). `src/index.js` shows `0`, since it only re-exports and has
 nothing to count.
 
@@ -102,6 +104,7 @@ in [All unit tests](#all-unit-tests).
 | `NoPathError`: extends `FlowStateError` but is not about a refused event. Names both states in the message, and has read-only `fromStateName` and `toStateName`.                                                                                                                                                                                | `errors.test.js`, `NoPathError`                                 | ✅ 6/6   |
 | All error classes: `errors.js` exports these six and nothing else, one `catch` handles them all, and each is told apart from the others.                                                                                                                                                                                                        | `errors.test.js`, `the error family`                            | ✅ 5/5   |
 | `src/index.js`: exports `StateMachine` and the error classes, and nothing else.                                                                                                                                                                                                                                                                 | `index.test.js`                                                 | ✅ 2/2   |
+| Integration: an order placed, paid, shipped and cancelled with only the v1 names (hooks, guard, `canSend`, `eventNamesFrom`, the errors), then `history`, `undoLastMove`, `canReach` and `findPathTo` on the same machine.                                                                                                                      | `integration/orderLifecycle.test.js`                            | ✅ 2/2   |
 | Internal `StateName`, `EventName`: reject anything but a non-empty string without whitespace at the start or end.                                                                                                                                                                                                                               | `names.test.js`                                                 | ✅ 13/13 |
 | Internal `State`: runs its hooks with the context, and rejects hooks that are not functions.                                                                                                                                                                                                                                                    | `State.test.js`                                                 | ✅ 9/9   |
 | Internal `Transition`: checks its fields, matches its event by exact name, and treats the guard's answer as truthy or falsy.                                                                                                                                                                                                                    | `Transition.test.js`                                            | ✅ 28/28 |
@@ -138,7 +141,7 @@ and property of `StateMachine`, and `UnknownStateError`, `NoTransitionError`, `B
 ### All unit tests
 
 <details>
-<summary>The 291 test names, file by file, as <code>npm run test:verbose</code> prints them (without the times)</summary>
+<summary>The 293 test names, file by file, as <code>npm run test:verbose</code> prints them (without the times)</summary>
 
 ```text
 ✓ test/HistoryEntry.test.js > HistoryEntry > records the state the machine left, the state it entered and the event that was sent
@@ -432,15 +435,17 @@ and property of `StateMachine`, and `UnknownStateError`, `NoTransitionError`, `B
 ✓ test/names.test.js > EventName > names its own class in the error message
 ✓ test/names.test.js > EventName > does not let the text be written from outside
 ✓ test/names.test.js > StateName and EventName > are separate types, so a state name is not an event name
+✓ test/integration/orderLifecycle.test.js > An order through the public interface > works with the v1 interface as before
+✓ test/integration/orderLifecycle.test.js > An order through the public interface > adds history, undo and path search (v2) to the same machine
 
- Test Files  19 passed (19)
-      Tests  291 passed (291)
+ Test Files  20 passed (20)
+      Tests  293 passed (293)
 ```
 
 </details>
 
 ## Conclusion
 
-All 291 unit tests and every step of the tour passed on 2026-10-17, and the unit tests cover 100% of `src/`.
+All 293 tests passed on 2026-10-20, every step of the tour on 2026-10-17, and the unit tests cover 100% of `src/`.
 The gaps, such as other operating systems, browsers and typing into a real terminal, are listed under
 [Not tested](#not-tested).
