@@ -6,11 +6,11 @@ This report describes how flowstate-js was tested and what the results were.
 
 The module is tested in two ways:
 
-1. **Automated tests** with [Vitest](https://vitest.dev/): 293 tests in 20 files in [`test/`](test/). The unit tests
+1. **Automated tests** with [Vitest](https://vitest.dev/): 291 unit tests and 2 integration tests in 20 files in
+   [`test/`](test/). The unit tests
    cover every public method and property of `StateMachine`, the error classes, the exports of `src/index.js`, and
-   the internal classes on their own. Each test checks one behaviour, and its name says which. Together they cover
-   100% of the statements, branches, functions and lines in `src/`. One integration test,
-   [`test/integration/orderLifecycle.test.js`](test/integration/orderLifecycle.test.js), runs an order through the
+   the internal classes on their own. Each test checks one behaviour, and its name says which. Two integration tests in
+   [`test/integration/orderLifecycle.test.js`](test/integration/orderLifecycle.test.js) run an order through the
    public interface: first with only the v1 names, then with the v2 additions.
 2. **The Test-App** in [`test-app/`](test-app/), a console app that moves an order through the module. It is tested
    by hand: the [manual tests](#manual-tests-test-app) are the tour in [`test-app/README.md`](test-app/README.md).
@@ -20,7 +20,7 @@ as a guard that returns `NaN` or a hook that throws. The Test-App imports the mo
 the `exports` in `package.json`, as a user does. It links the whole project folder (`file:..`), so it does not
 check which files a user who installs from GitHub gets (`"files"` in `package.json`).
 
-### Run the unit tests
+### Run the automated tests
 
 ```bash
 git clone https://github.com/Abbas288/flowstate-js.git
@@ -33,7 +33,7 @@ To see the name of every test, run `npm run test:verbose`.
 
 To measure the coverage, run `npm run test:coverage`. It prints a summary and writes the full report to `coverage/`.
 
-Vitest 5 needs Node.js 22.12 or later. To run the unit tests on Node.js 18 or 20, which the module also supports,
+Vitest 5 needs Node.js 22.12 or later. To run the automated tests on Node.js 18 or 20, which the module also supports,
 use Vitest 2 through `npx`. Nothing is installed in the project:
 
 ```bash
@@ -60,7 +60,7 @@ In PowerShell, each string becomes one line:
 | Item    | Value                                                                                                                                                                                                                           |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Commit  | `src/` and `test/` as in `ade729a`. The Test-App as in the commit that has this report.                                                                                                                                         |
-| Date    | 2026-10-17                                                                                                                                                                                                                      |
+| Date    | Manual tests: 2026-10-17. Latest automated tests and coverage: 2026-10-21.                                                                                                                                                      |
 | OS      | Windows 11 Home                                                                                                                                                                                                                 |
 | Shell   | Git Bash for the manual tests (2026-10-17)                                                                                                                                                                                      |
 | Node.js | v22.23.2 for every run in this report. On GitHub, CI run 38934816969 for `ade729a` (2026-10-16) passed on all four jobs: format, lint and test on Node.js 22 and 24, and the unit tests with Vitest 2.1.9 on Node.js 18 and 20. |
@@ -69,14 +69,21 @@ In PowerShell, each string becomes one line:
 
 ## Test Results
 
-### Unit tests
+### Automated tests
 
-**293 of 293 passed.** The coverage of `src/` is 100% for statements (182), branches (47), functions (83) and
-lines (178). `src/index.js` shows `0`, since it only re-exports and has
-nothing to count.
+**293 of 293 passed**, 2026-10-21. Each row measures coverage of `src/` with that test group run separately.
 
-Each row in the table is one group of tests, run with Vitest. The second column names the test file. The name of every test is
-in [All unit tests](#all-unit-tests).
+| Test group        | Tests | Statements | Branches | Functions |  Lines |
+| ----------------- | ----: | ---------: | -------: | --------: | -----: |
+| Unit tests        |   291 |       100% |     100% |      100% |   100% |
+| Integration tests |     2 |     88.46% |   72.34% |    89.15% | 88.20% |
+
+The unit tests already cover all measurable code in `src/`, so the combined coverage is thereofore 100%.
+
+`src/index.js` only re-exports and has no executable code to measure.
+
+Each row in the following table is one group of tests, run with Vitest. The second column names the test file. The name of every test is
+in [All automated tests](#all-automated-tests).
 
 | What was tested                                                                                                                                                                                                                                                                                                                                 | How it was tested                                               | Result   |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------- |
@@ -138,7 +145,7 @@ and property of `StateMachine`, and `UnknownStateError`, `NoTransitionError`, `B
   keyboard were not checked.
 - That a user who installs from GitHub gets every file the module needs. The Test-App links the whole project folder.
 
-### All unit tests
+### All automated tests
 
 <details>
 <summary>The 293 test names, file by file, as <code>npm run test:verbose</code> prints them (without the times)</summary>
@@ -446,6 +453,6 @@ and property of `StateMachine`, and `UnknownStateError`, `NoTransitionError`, `B
 
 ## Conclusion
 
-All 293 tests passed on 2026-10-20, every step of the tour on 2026-10-17, and the unit tests cover 100% of `src/`.
+All 293 automated tests passed on 2026-10-21, every step of the tour on 2026-10-17, and the unit tests cover 100% of `src/`.
 The gaps, such as other operating systems, browsers and typing into a real terminal, are listed under
 [Not tested](#not-tested).
